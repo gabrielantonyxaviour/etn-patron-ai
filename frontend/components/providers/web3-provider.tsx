@@ -12,14 +12,25 @@ import { createConfig, WagmiProvider } from "wagmi";
 import { electroneum, electroneumTestnet } from "viem/chains";
 import { EthereumWalletConnectors } from "@dynamic-labs/ethereum";
 
-const config = createConfig({
-  chains: [electroneum, electroneumTestnet],
-  multiInjectedProviderDiscovery: false,
-  transports: {
-    [electroneum.id]: http(),
-    [electroneumTestnet.id]: http(),
-  },
-});
+const IS_PRODUCTION = JSON.parse(
+  process.env.NEXT_PUBLIC_IS_PRODUCTION || "false"
+);
+
+const config = IS_PRODUCTION
+  ? createConfig({
+      chains: [electroneum],
+      multiInjectedProviderDiscovery: false,
+      transports: {
+        [electroneum.id]: http(),
+      },
+    })
+  : createConfig({
+      chains: [electroneumTestnet],
+      multiInjectedProviderDiscovery: false,
+      transports: {
+        [electroneumTestnet.id]: http(),
+      },
+    });
 
 const queryClient = new QueryClient();
 interface Web3ProviderProps {
