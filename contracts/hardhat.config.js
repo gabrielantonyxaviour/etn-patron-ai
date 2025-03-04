@@ -7,19 +7,13 @@ const PRIVATE_KEY =
   "0x0000000000000000000000000000000000000000000000000000000000000000";
 
 // Zircuit Testnet
-const ZIRCUIT_RPC_URL = "https://zircuit1-testnet.p2pify.com";
-const ZIRCUIT_API_KEY = process.env.ZIRCUIT_API_KEY || "";
-const ZIRCUIT_FACTORY_ADDRESS = process.env.ZIRCUIT_FACTORY_ADDRESS;
-const ZIRCUIT_ROUTER_ADDRESS = process.env.ZIRCUIT_ROUTER_ADDRESS;
-const ZIRCUIT_WRAPPED = process.env.ZIRCUIT_WRAPPED;
+const ELECTRONEUM_RPC_URL =
+  "https://rpc.ankr.com/electroneum/" + process.env.ANKR_API_KEY;
+const ELECTRONEUM_TESTNET_RPC_URL =
+  "https://rpc.ankr.com/electroneum_testnet/" + process.env.ANKR_API_KEY;
 
-// Flow EVM Testnet
-const FLOW_EVM_RPC_URL =
-  "https://flow-testnet.g.alchemy.com/v2/" + process.env.ALCHEMY_API_KEY;
-const FLOW_API_KEY = process.env.FLOW_API_KEY || "";
-const FLOW_FACTORY_ADDRESS = process.env.FLOW_FACTORY_ADDRESS;
-const FLOW_ROUTER_ADDRESS = process.env.FLOW_ROUTER_ADDRESS;
-const FLOW_WRAPPED = process.env.FLOW_WRAPPED;
+const SEPOLIA_RPC_URL =
+  "https://eth-sepolia.g.alchemy.com/v2/" + process.env.ALCHEMY_API_KEY;
 
 /** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {
@@ -33,20 +27,55 @@ module.exports = {
     },
   },
   networks: {
-    zircuit: {
-      url: ZIRCUIT_RPC_URL,
+    electroneumTestnet: {
+      url: ELECTRONEUM_TESTNET_RPC_URL,
       accounts: [PRIVATE_KEY],
-      chainId: 48899, // Update with actual Zircuit Testnet chainId if different
-      gasPrice: 1000000000, // 1 gwei - adjust based on network
+      chainId: 5201420,
     },
-    flowEvm: {
-      url: FLOW_EVM_RPC_URL,
+    electroneum: {
+      url: ELECTRONEUM_RPC_URL,
       accounts: [PRIVATE_KEY],
-      chainId: 545, // Update with actual Flow EVM Testnet chainId if different
-      gasPrice: 1000000000, // 1 gwei - adjust based on network
+      chainId: 52014,
+    },
+    sepolia: {
+      url: SEPOLIA_RPC_URL,
+      accounts: [PRIVATE_KEY],
+      chainId: 11155111,
     },
   },
-  etherscan: {},
+  etherscan: {
+    apiKey: {
+      electroneumTestnet: "empty",
+      electroneum: "empty",
+      sepolia: "empty",
+    },
+    customChains: [
+      {
+        network: "electroneum",
+        chainId: 52014,
+        urls: {
+          apiURL: "https://blockexplorer.electroneum.com/api", // Replace with actual API URL
+          browserURL: "https://blockexplorer.electroneum.com", // Replace with actual explorer URL
+        },
+      },
+      {
+        network: "electroneumTestnet",
+        chainId: 5201420,
+        urls: {
+          apiURL: "https://blockexplorer.thesecurityteam.rocks/api", // Replace with actual API URL
+          browserURL: "https://blockexplorer.thesecurityteam.rocks", // Replace with actual explorer URL
+        },
+      },
+      {
+        network: "sepolia",
+        chainId: 11155111,
+        urls: {
+          apiURL: "https://eth-sepolia.blockscout.com/api", // Replace with actual API URL
+          browserURL: "https://eth-sepolia.blockscout.com/", // Replace with actual explorer URL
+        },
+      },
+    ],
+  },
   paths: {
     sources: "./contracts",
     tests: "./test",

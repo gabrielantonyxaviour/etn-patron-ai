@@ -2,10 +2,10 @@
 pragma solidity ^0.8.19;
 
 /**
- * @title ElectroPay
+ * @title ETNPatronAI
  * @dev Smart contract for managing micro-payments to content creators
  */
-contract ElectroPay {
+contract ETNPatronAI {
     address public owner;
     uint256 public platformFeePercentage; // represented as basis points (1% = 100)
 
