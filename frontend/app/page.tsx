@@ -70,7 +70,7 @@ export default function Home() {
             </Badge>
             <h2 className="text-3xl font-bold mb-4">Why Choose CreatorPay?</h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              Our platform leverages Electroneum's blockchain technology to
+              Our platform leverages Electroneum&apos;s blockchain technology to
               provide unique advantages for creators and supporters.
             </p>
           </div>
@@ -163,9 +163,9 @@ export default function Home() {
             Ready to Join the Revolution?
           </h2>
           <p className="text-lg mb-8 max-w-2xl mx-auto">
-            Whether you're a creator looking to monetize your content or a fan
-            wanting to support your favorites, CreatorPay makes it simple and
-            cost-effective.
+            Whether you&apos;re a creator looking to monetize your content or a
+            fan wanting to support your favorites, CreatorPay makes it simple
+            and cost-effective.
           </p>
           <div className="flex flex-wrap gap-4 justify-center">
             <Link href="/explore">

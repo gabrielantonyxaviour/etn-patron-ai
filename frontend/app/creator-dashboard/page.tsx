@@ -46,18 +46,22 @@ import {
 } from "@/components/ui/dialog";
 import { PublishContentForm } from "@/components/publish-content-form";
 import { StatCard } from "@/components/stat-card";
-import { DynamicConnectButton, useDynamicContext } from "@dynamic-labs/sdk-react-core";
+import {
+  DynamicConnectButton,
+  DynamicWidget,
+  useDynamicContext,
+} from "@dynamic-labs/sdk-react-core";
 import { useAccount } from "wagmi";
 
 export default function CreatorDashboardPage() {
   const { address } = useWeb3Modal();
-  const {user}=useDynamicContext()
+  const { user, primaryWallet } = useDynamicContext();
   const [isRegistered, setIsRegistered] = useState(false);
 
   // In a real app, you would check if the user is registered as a creator
   // This is just for demo purposes
 
-  if (!user.) {
+  if (primaryWallet == null && user == null) {
     return (
       <div className="container mx-auto py-20 px-4 text-center">
         <h1 className="text-4xl font-bold mb-6">Creator Dashboard</h1>
@@ -65,10 +69,7 @@ export default function CreatorDashboardPage() {
           Connect your wallet to access your creator dashboard or register as a
           new creator.
         </p>
-        <DynamicConnectButton>
-          <Zap className="h-4 w-4" />
-          Connect Wallet
-        </DynamicConnectButton>
+        <DynamicWidget />
       </div>
     );
   }
@@ -632,7 +633,8 @@ export default function CreatorDashboardPage() {
                     </Button>
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    This is the wallet address where you'll receive payments.
+                    This is the wallet address where you$apos;ll receive
+                    payments.
                   </p>
                 </div>
 

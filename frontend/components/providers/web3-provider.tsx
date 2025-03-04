@@ -7,8 +7,10 @@ import {
   DynamicContextProvider,
   EthereumWalletConnectors,
   DynamicWagmiConnector,
+  mergeNetworks,
 } from "@/lib/dyanmic";
-import { electroneum, electroneumTestnet } from "viem/chains";
+import { electroneum, sepolia } from "viem/chains";
+import { useTheme } from "next-themes";
 
 const IS_PRODUCTION = JSON.parse(
   process.env.NEXT_PUBLIC_IS_PRODUCTION || "false"
@@ -23,10 +25,10 @@ const config = IS_PRODUCTION
       },
     })
   : createConfig({
-      chains: [electroneumTestnet],
+      chains: [sepolia],
       multiInjectedProviderDiscovery: false,
       transports: {
-        [electroneumTestnet.id]: http(),
+        [sepolia.id]: http(),
       },
     });
 
@@ -36,12 +38,50 @@ interface Web3ProviderProps {
 }
 
 export function Web3Provider({ children }: Web3ProviderProps) {
+  const { theme } = useTheme();
   return (
     <DynamicContextProvider
-      theme={"auto"}
+      theme={theme == "light" ? "light" : "dark"}
       settings={{
         environmentId: process.env.NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID || "",
         walletConnectors: [EthereumWalletConnectors],
+        overrides: {
+          evmNetworks: [
+            IS_PRODUCTION
+              ? {
+                  key: electroneum.id.toString(),
+                  blockExplorerUrls: [electroneum.blockExplorers.default.url],
+                  chainId: electroneum.id,
+                  chainName: electroneum.name,
+                  iconUrls: ["https://app.dynamic.xyz/assets/networks/eth.svg"],
+                  name: electroneum.name,
+                  nativeCurrency: {
+                    ...electroneum.nativeCurrency,
+                    iconUrl: "https://app.dynamic.xyz/assets/networks/eth.svg",
+                  },
+                  networkId: electroneum.id,
+                  rpcUrls: [electroneum.rpcUrls.default.http[0]],
+                  vanityName: electroneum.name,
+                  isTestnet: electroneum.testnet,
+                }
+              : {
+                  key: sepolia.id.toString(),
+                  blockExplorerUrls: [sepolia.blockExplorers.default.url],
+                  chainId: sepolia.id,
+                  chainName: sepolia.name,
+                  iconUrls: ["https://app.dynamic.xyz/assets/networks/eth.svg"],
+                  name: sepolia.name,
+                  nativeCurrency: {
+                    ...sepolia.nativeCurrency,
+                    iconUrl: "https://app.dynamic.xyz/assets/networks/eth.svg",
+                  },
+                  networkId: sepolia.id,
+                  rpcUrls: [sepolia.rpcUrls.default.http[0]],
+                  vanityName: sepolia.name,
+                  isTestnet: sepolia.testnet,
+                },
+          ],
+        },
       }}
     >
       <WagmiProvider config={config}>

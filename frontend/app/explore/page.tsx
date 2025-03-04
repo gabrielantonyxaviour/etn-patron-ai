@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, Filter, Zap } from "lucide-react";
+import { Search, Filter } from "lucide-react";
 import Link from "next/link";
 import { CreatorCard } from "@/components/creator-card";
 import { ContentCard } from "@/components/content-card";
