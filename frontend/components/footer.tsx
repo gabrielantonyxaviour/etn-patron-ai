@@ -12,12 +12,13 @@ export function Footer() {
           <div className="flex flex-col gap-4">
             <Link href="/" className="flex items-center gap-2">
               <Image
-                src="/logo.svg"
-                alt="CreatorPay Logo"
+                src="/logo.png"
+                alt="ETN Patron AI Logo"
                 width={32}
+                className="rounded-full"
                 height={32}
               />
-              <span className="font-bold text-xl">CreatorPay</span>
+              <span className="font-bold text-xl">ETN Patron AI</span>
             </Link>
             <p className="text-sm text-muted-foreground max-w-xs">
               Empowering content creators with blockchain-based micro-payments
@@ -26,7 +27,7 @@ export function Footer() {
             <div className="flex gap-4">
               <Button variant="ghost" size="icon" asChild>
                 <Link
-                  href="https://twitter.com"
+                  href="https://x.com/ETNPatronAI"
                   target="_blank"
                   rel="noreferrer"
                 >
@@ -36,7 +37,7 @@ export function Footer() {
               </Button>
               <Button variant="ghost" size="icon" asChild>
                 <Link
-                  href="https://github.com"
+                  href="https://github.com/gabrielantonyxaviour/etn-patron-ai"
                   target="_blank"
                   rel="noreferrer"
                 >
@@ -157,8 +158,8 @@ export function Footer() {
         <Separator className="my-6" />
         <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
           <p className="text-xs text-muted-foreground">
-            &copy; {new Date().getFullYear()} CreatorPay. Built for Electroneum
-            Hackathon 2025.
+            &copy; {new Date().getFullYear()} ETN Patron AI. Built for
+            Electroneum Hackathon 2025.
           </p>
           <p className="text-xs text-muted-foreground">
             Powered by Electroneum Blockchain

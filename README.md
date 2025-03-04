@@ -10,7 +10,7 @@ We saw Electroneum's ultra-fast 5-second block finality and low transaction cost
 
 ## What it does
 
-CreatorPay is a decentralized platform that enables seamless micro-payments between content consumers and creators. Our platform offers several key features:
+ETN Patron AI is a decentralized platform that enables seamless micro-payments between content consumers and creators. Our platform offers several key features:
 
 - **Direct Tipping**: Fans can send tips of any size to creators with minimal fees
 - **Content Monetization**: Creators can offer premium content with pay-per-view access
@@ -23,7 +23,7 @@ All transactions occur on-chain with 5-second finality, meaning creators receive
 
 ## How we built it
 
-We built CreatorPay using a modern tech stack centered around the Electroneum blockchain:
+We built ETN Patron AI using a modern tech stack centered around the Electroneum blockchain:
 
 - **Frontend**: Next.js 14 with App Router for a responsive, server-side rendered experience
 - **UI Components**: ShadCN UI library with Tailwind CSS for a clean, accessible interface
@@ -71,7 +71,7 @@ This project provided valuable insights into:
 - The challenges and solutions for content monetization in a decentralized ecosystem
 - Modern frontend development practices using Next.js 14's App Router and ShadCN UI components
 
-## What's next for CreatorPay
+## What's next for ETN Patron AI
 
 We have an ambitious roadmap ahead:
 
@@ -83,4 +83,4 @@ We have an ambitious roadmap ahead:
 - **DAO Governance**: Implementing a governance token to allow community control over platform fees and features
 - **Fiat On/Off Ramps**: Direct integration with fiat payment methods for users unfamiliar with crypto
 
-Our vision is to create a comprehensive ecosystem that empowers creators to monetize their content directly from their audience, without intermediaries taking large cuts of their earnings. With Electroneum's technology as our foundation, we believe CreatorPay can revolutionize the creator economy.
+Our vision is to create a comprehensive ecosystem that empowers creators to monetize their content directly from their audience, without intermediaries taking large cuts of their earnings. With Electroneum's technology as our foundation, we believe ETN Patron AI can revolutionize the creator economy.

@@ -13,7 +13,7 @@ export function HowItWorks() {
       id: 1,
       title: "Connect Wallet",
       description:
-        "Connect your Electroneum-compatible wallet to start using CreatorPay",
+        "Connect your Electroneum-compatible wallet to start using ETN Patron AI",
       icon: Wallet,
       color: "bg-blue-100 text-blue-700",
     },

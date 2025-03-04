@@ -54,18 +54,19 @@ export function Navbar() {
   ];
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-6">
       <div className="container flex h-16 items-center justify-between">
         <div className="flex items-center gap-2 mr-4">
           <Link href="/" className="flex items-center gap-2">
             <Image
-              src="/logo.svg"
-              alt="CreatorPay Logo"
+              src="/logo.png"
+              alt="ETN Patron AI Logo"
               width={32}
               height={32}
+              className="rounded-full"
             />
             <span className="hidden sm:inline-block font-bold text-xl">
-              CreatorPay
+              ETN Patron AI
             </span>
           </Link>
         </div>

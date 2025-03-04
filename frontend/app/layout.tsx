@@ -10,7 +10,7 @@ import { Toaster } from "@/components/ui/sonner";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "CreatorPay - Micro-payments for Content Creators",
+  title: "ETN Patron AI - Micro-payments for Content Creators",
   description:
     "Support your favorite creators with micro-payments using Electroneum blockchain",
 };

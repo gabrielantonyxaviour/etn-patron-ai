@@ -10,7 +10,7 @@ import { ContentCard } from "@/components/content-card";
 import { Separator } from "@/components/ui/separator";
 
 export const metadata: Metadata = {
-  title: "Explore Creators | CreatorPay",
+  title: "Explore Creators | ETN Patron AI",
   description: "Discover content creators and support them with micro-payments",
 };
 

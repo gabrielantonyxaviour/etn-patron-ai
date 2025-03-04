@@ -68,7 +68,9 @@ export default function Home() {
             <Badge variant="outline" className="mb-4">
               Features
             </Badge>
-            <h2 className="text-3xl font-bold mb-4">Why Choose CreatorPay?</h2>
+            <h2 className="text-3xl font-bold mb-4">
+              Why Choose ETN Patron AI?
+            </h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
               Our platform leverages Electroneum&apos;s blockchain technology to
               provide unique advantages for creators and supporters.
@@ -164,7 +166,7 @@ export default function Home() {
           </h2>
           <p className="text-lg mb-8 max-w-2xl mx-auto">
             Whether you&apos;re a creator looking to monetize your content or a
-            fan wanting to support your favorites, CreatorPay makes it simple
+            fan wanting to support your favorites, ETN Patron AI makes it simple
             and cost-effective.
           </p>
           <div className="flex flex-wrap gap-4 justify-center">
