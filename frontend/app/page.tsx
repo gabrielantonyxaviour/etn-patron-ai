@@ -10,7 +10,6 @@ import { CheckCircle, Zap, PiggyBank, Shield } from "lucide-react";
 export default function Home() {
   return (
     <div className="w-full">
-      {/* Hero section */}
       <section className="relative bg-gradient-to-br from-blue-900 to-blue-600 py-20 text-white">
         <div className="container mx-auto px-4 md:px-6 flex flex-col lg:flex-row items-center">
           <div className="lg:w-1/2 mb-10 lg:mb-0">

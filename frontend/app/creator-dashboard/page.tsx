@@ -46,9 +46,10 @@ import {
 } from "@/components/ui/dialog";
 import { PublishContentForm } from "@/components/publish-content-form";
 import { StatCard } from "@/components/stat-card";
+import { DynamicConnectButton } from "@dynamic-labs/sdk-react-core";
 
 export default function CreatorDashboardPage() {
-  const { address, isConnected, connect } = useWeb3Modal();
+  const { address, isConnected } = useWeb3Modal();
   const [isRegistered, setIsRegistered] = useState(false);
 
   // In a real app, you would check if the user is registered as a creator
@@ -62,10 +63,10 @@ export default function CreatorDashboardPage() {
           Connect your wallet to access your creator dashboard or register as a
           new creator.
         </p>
-        <Button size="lg" onClick={connect} className="gap-2">
+        <DynamicConnectButton>
           <Zap className="h-4 w-4" />
           Connect Wallet
-        </Button>
+        </DynamicConnectButton>
       </div>
     );
   }
