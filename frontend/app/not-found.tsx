@@ -6,7 +6,7 @@ import { ArrowLeft, Home, Search } from "lucide-react";
 
 export default function NotFound() {
   return (
-    <div className="container flex flex-col items-center justify-center min-h-[70vh] px-4 py-16 text-center">
+    <div className="w-full flex flex-col items-center justify-center min-h-[70vh] px-4 py-16 text-center">
       <div className="relative mb-8">
         <Image
           src="/not-found.png"
@@ -45,13 +45,14 @@ export default function NotFound() {
         </Button>
       </div>
 
-      <div className="mt-16">
-        <div className="px-4 py-2 rounded-lg bg-muted text-muted-foreground text-sm max-w-lg mx-auto">
+      <div className="mt-16 w-full max-w-lg mx-auto">
+        <div className="px-4 py-2 rounded-lg bg-muted text-muted-foreground text-sm">
           <p>
             If you believe this is an error, please contact our support team at{" "}
             <a
               href="mailto:gabrielantony56@gmail.com"
-              className="text-primary hover:underline"
+              className="text-primary
+            hover:underline"
             >
               gabrielantony56@gmail.com
             </a>
