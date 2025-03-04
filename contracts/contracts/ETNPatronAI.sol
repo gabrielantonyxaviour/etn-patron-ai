@@ -8,18 +8,21 @@ pragma solidity ^0.8.19;
 contract ETNPatronAI {
     address public owner;
     uint256 public platformFeePercentage; // represented as basis points (1% = 100)
+    uint256 private creatorIdCounter;
+    uint256 private contentIdCounter;
 
     struct Creator {
         address payable walletAddress;
-        string profileId;
         bool isVerified;
         uint256 totalEarned;
         uint256 subscriberCount;
+        uint256 creatorId;
     }
 
     struct Content {
-        string contentId;
+        uint256 contentId;
         address creatorAddress;
+        string content;
         uint256 price; // in wei
         bool isPremium;
         uint256 tipTotal;
@@ -35,13 +38,15 @@ contract ETNPatronAI {
     }
 
     mapping(address => Creator) public creators;
-    mapping(string => Content) public contents;
+    mapping(uint256 => Content) public contents;
     mapping(address => mapping(address => Subscription)) public subscriptions;
+    mapping(address => mapping(uint256 => bool)) public purchasedContent;
     mapping(address => uint256) public platformBalance;
 
-    event CreatorRegistered(address indexed creatorAddress, string profileId);
+    event CreatorRegistered(address indexed creatorAddress, uint256 creatorId);
     event ContentPublished(
-        string indexed contentId,
+        uint256 indexed contentId,
+        string indexed content,
         address indexed creatorAddress,
         uint256 price,
         bool isPremium
@@ -49,13 +54,13 @@ contract ETNPatronAI {
     event PaymentMade(
         address indexed from,
         address indexed to,
-        string contentId,
+        uint256 contentId,
         uint256 amount
     );
     event TipSent(
         address indexed from,
         address indexed to,
-        string contentId,
+        uint256 contentId,
         uint256 amount
     );
     event SubscriptionStarted(
@@ -70,6 +75,8 @@ contract ETNPatronAI {
     constructor(uint256 _platformFeePercentage) {
         owner = msg.sender;
         platformFeePercentage = _platformFeePercentage;
+        creatorIdCounter = 1;
+        contentIdCounter = 1;
     }
 
     modifier onlyOwner() {
@@ -88,21 +95,22 @@ contract ETNPatronAI {
         _;
     }
 
-    function registerCreator(string memory _profileId) external {
+    function registerCreator() external {
         require(
             creators[msg.sender].walletAddress == address(0),
             "Creator already registered"
         );
 
+        uint256 newCreatorId = creatorIdCounter++;
         creators[msg.sender] = Creator({
             walletAddress: payable(msg.sender),
-            profileId: _profileId,
             isVerified: false,
             totalEarned: 0,
-            subscriberCount: 0
+            subscriberCount: 0,
+            creatorId: newCreatorId
         });
 
-        emit CreatorRegistered(msg.sender, _profileId);
+        emit CreatorRegistered(msg.sender, newCreatorId);
     }
 
     function verifyCreator(address _creatorAddress) external onlyOwner {
@@ -114,18 +122,14 @@ contract ETNPatronAI {
     }
 
     function publishContent(
-        string memory _contentId,
+        string memory content,
         uint256 _price,
         bool _isPremium
     ) external onlyCreator {
-        require(bytes(_contentId).length > 0, "Content ID cannot be empty");
-        require(
-            contents[_contentId].creatorAddress == address(0),
-            "Content ID already exists"
-        );
-
-        contents[_contentId] = Content({
-            contentId: _contentId,
+        uint256 newContentId = contentIdCounter++;
+        contents[newContentId] = Content({
+            contentId: newContentId,
+            content: content,
             creatorAddress: msg.sender,
             price: _price,
             isPremium: _isPremium,
@@ -133,10 +137,16 @@ contract ETNPatronAI {
             purchaseCount: 0
         });
 
-        emit ContentPublished(_contentId, msg.sender, _price, _isPremium);
+        emit ContentPublished(
+            newContentId,
+            content,
+            msg.sender,
+            _price,
+            _isPremium
+        );
     }
 
-    function purchaseContent(string memory _contentId) external payable {
+    function purchaseContent(uint256 _contentId) external payable {
         Content storage content = contents[_contentId];
         require(content.creatorAddress != address(0), "Content does not exist");
         require(msg.value >= content.price, "Insufficient payment");
@@ -146,6 +156,7 @@ contract ETNPatronAI {
 
         platformBalance[owner] += platformFee;
         creators[content.creatorAddress].totalEarned += creatorPayment;
+        purchasedContent[msg.sender][_contentId] = true;
         content.purchaseCount += 1;
 
         emit PaymentMade(
@@ -156,7 +167,7 @@ contract ETNPatronAI {
         );
     }
 
-    function tipCreator(string memory _contentId) external payable {
+    function tipCreator(uint256 _contentId) external payable {
         Content storage content = contents[_contentId];
         require(content.creatorAddress != address(0), "Content does not exist");
         require(msg.value > 0, "Tip amount must be greater than 0");
@@ -212,6 +223,17 @@ contract ETNPatronAI {
     ) public view returns (bool) {
         Subscription memory sub = subscriptions[_subscriber][_creator];
         return sub.endTime > block.timestamp;
+    }
+
+    function canDecryptContent(
+        address _caller,
+        uint256 _contentId
+    ) public view returns (bool) {
+        Content memory content = contents[_contentId];
+        return
+            content.creatorAddress == _caller ||
+            isSubscribed(_caller, content.creatorAddress) ||
+            purchasedContent[_caller][_contentId];
     }
 
     function withdraw() external {
