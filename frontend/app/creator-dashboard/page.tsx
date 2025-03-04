@@ -46,16 +46,18 @@ import {
 } from "@/components/ui/dialog";
 import { PublishContentForm } from "@/components/publish-content-form";
 import { StatCard } from "@/components/stat-card";
-import { DynamicConnectButton } from "@dynamic-labs/sdk-react-core";
+import { DynamicConnectButton, useDynamicContext } from "@dynamic-labs/sdk-react-core";
+import { useAccount } from "wagmi";
 
 export default function CreatorDashboardPage() {
-  const { address, isConnected } = useWeb3Modal();
+  const { address } = useWeb3Modal();
+  const {user}=useDynamicContext()
   const [isRegistered, setIsRegistered] = useState(false);
 
   // In a real app, you would check if the user is registered as a creator
   // This is just for demo purposes
 
-  if (!isConnected) {
+  if (!user.) {
     return (
       <div className="container mx-auto py-20 px-4 text-center">
         <h1 className="text-4xl font-bold mb-6">Creator Dashboard</h1>

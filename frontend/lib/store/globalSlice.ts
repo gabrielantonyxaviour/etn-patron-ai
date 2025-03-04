@@ -1,12 +1,20 @@
 import { StateCreator } from "zustand";
 
-interface GlobalState {}
+interface GlobalState {
+  count: number;
+}
 
-interface GlobalActions {}
+interface GlobalActions {
+  increment: () => void;
+  decrement: () => void;
+  reset: () => void;
+}
 
 export type GlobalSlice = GlobalState & GlobalActions;
 
-export const initialGlobalState: GlobalState = {};
+export const initialGlobalState: GlobalState = {
+  count: 0,
+};
 
 export const createGlobalSlice: StateCreator<
   GlobalSlice,
@@ -15,4 +23,7 @@ export const createGlobalSlice: StateCreator<
   GlobalSlice
 > = (set) => ({
   ...initialGlobalState,
+  increment: () => set((state) => ({ count: (state.count || 0) + 1 })),
+  decrement: () => set((state) => ({ count: (state.count || 0) - 1 })),
+  reset: () => set(initialGlobalState),
 });

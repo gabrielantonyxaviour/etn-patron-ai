@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { FeaturedCreators } from "@/components/featured-creators";
 import { HowItWorks } from "@/components/how-it-works";
-import { CheckCircle, Zap, PiggyBank, Shield } from "lucide-react";
+import { Zap, PiggyBank, Shield } from "lucide-react";
 
 export default function Home() {
   return (

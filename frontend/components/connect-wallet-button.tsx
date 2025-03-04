@@ -14,17 +14,23 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { useConnect, useDisconnect } from "wagmi";
 
 interface ConnectWalletButtonProps {
   className?: string;
 }
 
 export function ConnectWalletButton({ className }: ConnectWalletButtonProps) {
-  const { address, isConnected, connect, disconnect, balance } = useWeb3Modal();
+  const { address, isConnected, balance } = useWeb3Modal();
 
   if (!isConnected) {
     return (
-      <Button onClick={connect} className={cn("gap-2", className)}>
+      <Button
+        onClick={() => {
+          connect();
+        }}
+        className={cn("gap-2", className)}
+      >
         <Wallet className="h-4 w-4" />
         Connect Wallet
       </Button>

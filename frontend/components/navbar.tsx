@@ -5,11 +5,9 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { ConnectWalletButton } from "./connect-wallet-button";
 import { ThemeToggle } from "./theme-toggle";
 import {
   Menu,
-  X,
   Home,
   Compass,
   LayoutDashboard,
@@ -18,6 +16,7 @@ import {
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
+import { DynamicWidget } from "@dynamic-labs/sdk-react-core";
 
 export function Navbar() {
   const pathname = usePathname();
@@ -94,7 +93,7 @@ export function Navbar() {
 
           {/* Connect wallet button on desktop */}
           <div className="hidden md:flex">
-            <ConnectWalletButton />
+            <DynamicWidget />
           </div>
 
           {/* Mobile menu */}
@@ -124,7 +123,7 @@ export function Navbar() {
                 ))}
               </div>
               <div className="mt-auto pb-8">
-                <ConnectWalletButton className="w-full" />
+                <DynamicWidget />
               </div>
             </SheetContent>
           </Sheet>
