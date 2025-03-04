@@ -231,6 +231,7 @@ contract ETNPatronAI {
     ) public view returns (bool) {
         Content memory content = contents[_contentId];
         return
+            content.isPremium == false ||
             content.creatorAddress == _caller ||
             isSubscribed(_caller, content.creatorAddress) ||
             purchasedContent[_caller][_contentId];
