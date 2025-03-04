@@ -62,7 +62,9 @@ export default function CreatorDashboardPage() {
           Connect your wallet to access your creator dashboard or register as a
           new creator.
         </p>
-        <DynamicWidget />
+        <div className="w-full flex justify-center">
+          <DynamicWidget />
+        </div>
       </div>
     );
   }
