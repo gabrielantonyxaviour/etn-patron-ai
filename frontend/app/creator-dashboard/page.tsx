@@ -27,14 +27,12 @@ import {
   Users,
   DollarSign,
   Calendar,
-  Settings,
   Download,
   Edit,
   Eye,
 } from "lucide-react";
 import Link from "next/link";
 import { useWeb3Modal } from "@/hooks/use-web3";
-import { formatAddress } from "@/lib/utils";
 import {
   Dialog,
   DialogContent,
@@ -46,12 +44,7 @@ import {
 } from "@/components/ui/dialog";
 import { PublishContentForm } from "@/components/publish-content-form";
 import { StatCard } from "@/components/stat-card";
-import {
-  DynamicConnectButton,
-  DynamicWidget,
-  useDynamicContext,
-} from "@dynamic-labs/sdk-react-core";
-import { useAccount } from "wagmi";
+import { DynamicWidget, useDynamicContext } from "@dynamic-labs/sdk-react-core";
 
 export default function CreatorDashboardPage() {
   const { address } = useWeb3Modal();

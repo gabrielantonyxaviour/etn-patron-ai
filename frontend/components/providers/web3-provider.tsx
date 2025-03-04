@@ -7,7 +7,6 @@ import {
   DynamicContextProvider,
   EthereumWalletConnectors,
   DynamicWagmiConnector,
-  mergeNetworks,
 } from "@/lib/dyanmic";
 import { electroneum, sepolia } from "viem/chains";
 import { useTheme } from "next-themes";
