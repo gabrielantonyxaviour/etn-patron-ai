@@ -699,7 +699,10 @@ export default function CreatorDashboardPage() {
                   <Label>Profile Image</Label>
                   <div className="flex items-center gap-4">
                     <Avatar className="w-20 h-20">
-                      <AvatarImage src="/creators/avatar1.jpg" alt="Profile" />
+                      <AvatarImage
+                        src="https://i.pravatar.cc/298"
+                        alt="Profile"
+                      />
                       <AvatarFallback>DP</AvatarFallback>
                     </Avatar>
                     <Button variant="outline" className="gap-2">
