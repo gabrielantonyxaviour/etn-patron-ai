@@ -10,6 +10,7 @@ import { Zap, PiggyBank, Shield } from "lucide-react";
 export default function Home() {
   return (
     <div className="w-full">
+      {/* Hero section - this can stay the same as it has custom colors */}
       <section className="relative bg-gradient-to-br from-blue-900 to-blue-600 py-20 text-white">
         <div className="container mx-auto px-4 md:px-6 flex flex-col lg:flex-row items-center">
           <div className="lg:w-1/2 mb-10 lg:mb-0">
@@ -48,7 +49,7 @@ export default function Home() {
           <div className="lg:w-1/2 relative">
             <div className="relative h-[400px] w-full">
               <Image
-                src="/images/hero-illustration.svg"
+                src="/hero.png"
                 alt="Creators and Fans"
                 fill
                 className="object-contain"
@@ -58,17 +59,18 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-white to-transparent"></div>
+        {/* Update the gradient overlay to be theme-aware */}
+        <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-background to-transparent"></div>
       </section>
 
-      {/* Features section */}
-      <section className="py-20 bg-white">
+      {/* Features section - update backgrounds and colors to be theme-aware */}
+      <section className="py-20 bg-background">
         <div className="container mx-auto px-4 md:px-6">
           <div className="text-center mb-12">
             <Badge variant="outline" className="mb-4">
               Features
             </Badge>
-            <h2 className="text-3xl font-bold mb-4">
+            <h2 className="text-3xl font-bold mb-4 text-foreground">
               Why Choose ETN Patron AI?
             </h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
@@ -80,10 +82,12 @@ export default function Home() {
           <div className="grid md:grid-cols-3 gap-8">
             <Card className="border-none shadow-md">
               <CardContent className="pt-6">
-                <div className="mb-4 bg-blue-100 p-3 rounded-full w-12 h-12 flex items-center justify-center">
-                  <Zap className="h-6 w-6 text-blue-600" />
+                <div className="mb-4 bg-blue-100 dark:bg-blue-950 p-3 rounded-full w-12 h-12 flex items-center justify-center">
+                  <Zap className="h-6 w-6 text-blue-600 dark:text-blue-400" />
                 </div>
-                <h3 className="text-xl font-semibold mb-3">Instant Payments</h3>
+                <h3 className="text-xl font-semibold mb-3 text-foreground">
+                  Instant Payments
+                </h3>
                 <p className="text-muted-foreground">
                   5-second transaction finality means creators get paid
                   instantly without waiting for traditional payment processing.
@@ -93,10 +97,10 @@ export default function Home() {
 
             <Card className="border-none shadow-md">
               <CardContent className="pt-6">
-                <div className="mb-4 bg-pink-100 p-3 rounded-full w-12 h-12 flex items-center justify-center">
-                  <PiggyBank className="h-6 w-6 text-pink-600" />
+                <div className="mb-4 bg-pink-100 dark:bg-pink-950 p-3 rounded-full w-12 h-12 flex items-center justify-center">
+                  <PiggyBank className="h-6 w-6 text-pink-600 dark:text-pink-400" />
                 </div>
-                <h3 className="text-xl font-semibold mb-3">
+                <h3 className="text-xl font-semibold mb-3 text-foreground">
                   Micro-Transactions
                 </h3>
                 <p className="text-muted-foreground">
@@ -108,10 +112,10 @@ export default function Home() {
 
             <Card className="border-none shadow-md">
               <CardContent className="pt-6">
-                <div className="mb-4 bg-green-100 p-3 rounded-full w-12 h-12 flex items-center justify-center">
-                  <Shield className="h-6 w-6 text-green-600" />
+                <div className="mb-4 bg-green-100 dark:bg-green-950 p-3 rounded-full w-12 h-12 flex items-center justify-center">
+                  <Shield className="h-6 w-6 text-green-600 dark:text-green-400" />
                 </div>
-                <h3 className="text-xl font-semibold mb-3">
+                <h3 className="text-xl font-semibold mb-3 text-foreground">
                   Secure & Transparent
                 </h3>
                 <p className="text-muted-foreground">
@@ -124,14 +128,16 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Featured creators */}
-      <section className="py-20 bg-gray-50">
+      {/* Featured creators section - update background to be theme-aware */}
+      <section className="py-20 bg-muted">
         <div className="container mx-auto px-4 md:px-6">
           <div className="text-center mb-12">
             <Badge variant="outline" className="mb-4">
               Creators
             </Badge>
-            <h2 className="text-3xl font-bold mb-4">Featured Creators</h2>
+            <h2 className="text-3xl font-bold mb-4 text-foreground">
+              Featured Creators
+            </h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
               Discover talented creators already using our platform to connect
               with their audience.
@@ -141,14 +147,16 @@ export default function Home() {
         </div>
       </section>
 
-      {/* How it works */}
-      <section className="py-20 bg-white">
+      {/* How it works section - update background to be theme-aware */}
+      <section className="py-20 bg-background">
         <div className="container mx-auto px-4 md:px-6">
           <div className="text-center mb-12">
             <Badge variant="outline" className="mb-4">
               Getting Started
             </Badge>
-            <h2 className="text-3xl font-bold mb-4">How It Works</h2>
+            <h2 className="text-3xl font-bold mb-4 text-foreground">
+              How It Works
+            </h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
               Join our platform in a few simple steps and start supporting or
               monetizing content.
@@ -158,7 +166,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* CTA section */}
+      {/* CTA section - this can stay the same as it has custom colors */}
       <section className="bg-gradient-to-br from-pink-600 to-purple-600 py-20 text-white">
         <div className="container mx-auto px-4 md:px-6 text-center">
           <h2 className="text-3xl font-bold mb-6">
@@ -173,7 +181,7 @@ export default function Home() {
             <Link href="/explore">
               <Button
                 size="lg"
-                className="bg-white text-pink-600 hover:bg-gray-100"
+                className="bg-white text-pink-600 hover:bg-gray-100 dark:hover:bg-gray-200"
               >
                 Start Exploring
               </Button>

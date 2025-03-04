@@ -26,7 +26,7 @@ export default function RootLayout({
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
           <Web3Provider>
             <Navbar />
-            <main className="flex-grow">{children}</main>
+            <main className="flex-grow sen">{children}</main>
             <Footer />
             <Toaster />
           </Web3Provider>
