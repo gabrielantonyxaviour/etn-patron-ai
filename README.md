@@ -1,4 +1,4 @@
-# Electro Pay
+# ETN Patron AI
 
 Empowering Creators with Micro-Payments on Electroneum.
 
