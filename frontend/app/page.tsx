@@ -116,11 +116,11 @@ export default function Home() {
                   <Shield className="h-6 w-6 text-green-600 dark:text-green-400" />
                 </div>
                 <h3 className="text-xl font-semibold mb-3 text-foreground">
-                  Secure & Transparent
+                  Secure with Lit Protocol
                 </h3>
                 <p className="text-muted-foreground">
-                  Blockchain-based payments provide security and transparency
-                  for both creators and supporters.
+                  Exclusive content is encrypted with Lit Protocol, ensuring
+                  secure and private access for supporters.
                 </p>
               </CardContent>
             </Card>

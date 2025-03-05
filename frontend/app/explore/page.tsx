@@ -1,151 +1,178 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import { Metadata } from "next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, Filter } from "lucide-react";
+import { Search, Filter, CircleDashedIcon } from "lucide-react";
 import Link from "next/link";
 import { CreatorCard } from "@/components/creator-card";
 import { ContentCard } from "@/components/content-card";
 import { Separator } from "@/components/ui/separator";
+import { useSearchParams, useRouter } from "next/navigation";
 
-export const metadata: Metadata = {
-  title: "Explore Creators | ETN Patron AI",
-  description: "Discover content creators and support them with micro-payments",
-};
+// Define types for our data
+interface Creator {
+  id: string;
+  creator_name: string;
+  category: string;
+  users: {
+    username: string;
+    avatar_url: string;
+  };
+  subscribers_count?: number;
+  bio?: string;
+  verified?: boolean;
+}
 
-// Dummy data - in a real app, this would come from an API
-const FEATURED_CREATORS = [
-  {
-    id: "1",
-    name: "Emma Johnson",
-    username: "emmacreates",
-    avatar: "https://i.pravatar.cc/298",
-    category: "Digital Art",
-    subscribers: 2456,
-    bio: "Digital artist creating vibrant illustrations and concept art",
-    verified: true,
-  },
-  {
-    id: "2",
-    name: "Alex Chen",
-    username: "alexmusic",
-    avatar: "https://i.pravatar.cc/300",
-    category: "Music",
-    subscribers: 5789,
-    bio: "Independent musician sharing original compositions and covers",
-    verified: true,
-  },
-  {
-    id: "3",
-    name: "Sarah Williams",
-    username: "sarahwrites",
-    avatar: "https://i.pravatar.cc/301",
-    category: "Writing",
-    subscribers: 1234,
-    bio: "Author sharing short stories and writing tips",
-    verified: false,
-  },
-  {
-    id: "4",
-    name: "Michael Brown",
-    username: "mikevlogs",
-    avatar: "https://i.pravatar.cc/302",
-    category: "Video",
-    subscribers: 8765,
-    bio: "Travel vlogger exploring hidden gems around the world",
-    verified: true,
-  },
-  {
-    id: "5",
-    name: "Jessica Lee",
-    username: "jesscrafts",
-    avatar: "https://i.pravatar.cc/303",
-    category: "Crafts",
-    subscribers: 3421,
-    bio: "DIY enthusiast sharing craft tutorials and home decor ideas",
-    verified: true,
-  },
-  {
-    id: "6",
-    name: "David Miller",
-    username: "davidcodes",
-    avatar: "https://i.pravatar.cc/299",
-    category: "Programming",
-    subscribers: 6543,
-    bio: "Software developer teaching coding and sharing open source projects",
-    verified: false,
-  },
-];
+interface Content {
+  id: string;
+  title: string;
+  description: string;
+  thumbnail_url: string;
+  content_type: string;
+  is_premium: boolean;
+  access_price: number;
+  views_count: number;
+  creator_profiles: {
+    id: string;
+    creator_name: string;
+    users: {
+      username: string;
+      avatar_url: string;
+    };
+  };
+}
 
-const TRENDING_CONTENT = [
-  {
-    id: "1",
-    title: "Creating Digital Landscapes with Procreate",
-    creator: {
-      id: "1",
-      name: "Emma Johnson",
-      username: "emmacreates",
-      avatar: "https://i.pravatar.cc/298",
-      verified: true,
-    },
-    thumbnail: "/content/thumb1.jpg",
-    category: "Digital Art",
-    price: "2.00",
-    isPremium: true,
-    views: 4567,
-  },
-  {
-    id: "2",
-    title: "New Album Release: Echoes of Tomorrow",
-    creator: {
-      id: "2",
-      name: "Alex Chen",
-      username: "alexmusic",
-      avatar: "https://i.pravatar.cc/300",
-      verified: true,
-    },
-    thumbnail: "/content/thumb2.jpg",
-    category: "Music",
-    price: "5.00",
-    isPremium: true,
-    views: 8901,
-  },
-  {
-    id: "3",
-    title: "Crafting Compelling Characters",
-    creator: {
-      id: "3",
-      name: "Sarah Williams",
-      username: "sarahwrites",
-      avatar: "https://i.pravatar.cc/301",
-      verified: false,
-    },
-    thumbnail: "/content/thumb3.jpg",
-    category: "Writing",
-    price: "0",
-    isPremium: false,
-    views: 3456,
-  },
-  {
-    id: "4",
-    title: "Hidden Beaches of Southeast Asia",
-    creator: {
-      id: "4",
-      name: "Michael Brown",
-      username: "mikevlogs",
-      avatar: "https://i.pravatar.cc/302",
-      verified: true,
-    },
-    thumbnail: "/content/thumb4.jpg",
-    category: "Video",
-    price: "3.50",
-    isPremium: true,
-    views: 9876,
-  },
+// Categories displayed on the Categories tab
+const CATEGORIES = [
+  "Digital Art",
+  "Music",
+  "Writing",
+  "Video",
+  "Photography",
+  "Programming",
+  "Design",
+  "Crafts",
 ];
 
 export default function ExplorePage() {
+  const [activeTab, setActiveTab] = useState("creators");
+  const [creators, setCreators] = useState<Creator[]>([]);
+  const [content, setContent] = useState<Content[]>([]);
+  const [trendingContent, setTrendingContent] = useState<Content[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const category = searchParams.get("category");
+
+  // Fetch creators from API
+  useEffect(() => {
+    async function fetchCreators() {
+      try {
+        setIsLoading(true);
+        const url = new URL(`${window.location.origin}/api/creators`);
+
+        if (category) {
+          url.searchParams.append("category", category);
+        }
+
+        const response = await fetch(url.toString());
+        const data = await response.json();
+
+        if (data.creators) {
+          setCreators(data.creators);
+        }
+      } catch (error) {
+        console.error("Error fetching creators:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchCreators();
+  }, [category]);
+
+  // Fetch content from API
+  useEffect(() => {
+    async function fetchContent() {
+      try {
+        setIsLoading(true);
+        const url = new URL(`${window.location.origin}/api/content`);
+
+        if (category) {
+          url.searchParams.append("contentType", category);
+        }
+
+        const response = await fetch(url.toString());
+        const data = await response.json();
+
+        if (data.content) {
+          setContent(data.content);
+        }
+      } catch (error) {
+        console.error("Error fetching content:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchContent();
+  }, [category]);
+
+  // Fetch trending content from API
+  useEffect(() => {
+    async function fetchTrendingContent() {
+      try {
+        const url = new URL(`${window.location.origin}/api/content`);
+        url.searchParams.append("limit", "4");
+
+        const response = await fetch(url.toString());
+        const data = await response.json();
+
+        if (data.content) {
+          // Sort by views to get trending content
+          const sorted = [...data.content].sort(
+            (a, b) => b.views_count - a.views_count
+          );
+          setTrendingContent(sorted);
+        }
+      } catch (error) {
+        console.error("Error fetching trending content:", error);
+      }
+    }
+
+    fetchTrendingContent();
+  }, []);
+
+  // Handle search input change
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+  };
+
+  // Filter creators/content based on search query
+  const filteredCreators = creators.filter(
+    (creator) =>
+      creator.creator_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      creator.users.username
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase()) ||
+      creator.category.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const filteredContent = content.filter(
+    (item) =>
+      item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.creator_profiles.creator_name
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase())
+  );
+
   return (
     <div className="container mx-auto py-8 px-4">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
@@ -158,46 +185,106 @@ export default function ExplorePage() {
         <div className="flex gap-2 w-full md:w-auto">
           <div className="relative flex-grow md:w-64">
             <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Search creators..." className="pl-8" />
+            <Input
+              placeholder="Search creators..."
+              className="pl-8"
+              value={searchQuery}
+              onChange={handleSearchChange}
+            />
           </div>
-          <Button variant="outline" size="icon">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => router.push(category ? "/" : "/explore?filter=all")}
+          >
             <Filter className="h-4 w-4" />
           </Button>
         </div>
       </div>
 
-      <Tabs defaultValue="creators" className="mb-8">
+      <Tabs
+        defaultValue="creators"
+        className="mb-8"
+        value={activeTab}
+        onValueChange={setActiveTab}
+      >
         <TabsList className="mb-4">
           <TabsTrigger value="creators">Creators</TabsTrigger>
           <TabsTrigger value="content">Content</TabsTrigger>
           <TabsTrigger value="categories">Categories</TabsTrigger>
         </TabsList>
         <TabsContent value="creators">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {FEATURED_CREATORS.map((creator) => (
-              <CreatorCard key={creator.id} creator={creator} />
-            ))}
-          </div>
+          {isLoading ? (
+            <div className=" flex justify-center items-center space-x-2">
+              <CircleDashedIcon className="h-6 w-6 animate-spin text-white" />
+              <p className="sen text-white">Loading creators</p>
+            </div>
+          ) : filteredCreators.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredCreators.map((creator) => (
+                <CreatorCard
+                  key={creator.id}
+                  creator={{
+                    id: creator.id,
+                    name: creator.creator_name,
+                    username: creator.users.username,
+                    avatar:
+                      creator.users.avatar_url || "https://i.pravatar.cc/150",
+                    category: creator.category,
+                    subscribers: creator.subscribers_count || 0,
+                    bio: creator.bio || "No bio available",
+                    verified: creator.verified || false,
+                  }}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center p-8">
+              No creators found. Try adjusting your search.
+            </div>
+          )}
         </TabsContent>
         <TabsContent value="content">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {TRENDING_CONTENT.map((content) => (
-              <ContentCard key={content.id} content={content} />
-            ))}
-          </div>
+          {isLoading ? (
+            <div className=" flex justify-center items-center space-x-2">
+              <CircleDashedIcon className="h-6 w-6 animate-spin text-white" />
+              <p className="sen text-white">Loading content</p>
+            </div>
+          ) : filteredContent.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {filteredContent.map((item) => (
+                <ContentCard
+                  key={item.id}
+                  content={{
+                    id: item.id,
+                    title: item.title,
+                    creator: {
+                      id: item.creator_profiles.id,
+                      name: item.creator_profiles.creator_name,
+                      username: item.creator_profiles.users.username,
+                      avatar:
+                        item.creator_profiles.users.avatar_url ||
+                        "https://i.pravatar.cc/150",
+                      verified: false, // You might want to add this to your API
+                    },
+                    thumbnail: item.thumbnail_url || "/content/placeholder.jpg",
+                    category: item.content_type,
+                    price: item.access_price.toString(),
+                    isPremium: item.is_premium,
+                    views: item.views_count,
+                  }}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center p-8">
+              No content found. Try adjusting your search.
+            </div>
+          )}
         </TabsContent>
         <TabsContent value="categories">
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {[
-              "Digital Art",
-              "Music",
-              "Writing",
-              "Video",
-              "Photography",
-              "Programming",
-              "Design",
-              "Crafts",
-            ].map((category) => (
+            {CATEGORIES.map((category) => (
               <Card
                 key={category}
                 className="overflow-hidden hover:shadow-md transition-shadow"
@@ -230,11 +317,38 @@ export default function ExplorePage() {
             <Link href="/explore?filter=trending">View All</Link>
           </Button>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {TRENDING_CONTENT.slice(0, 4).map((content) => (
-            <ContentCard key={content.id} content={content} />
-          ))}
-        </div>
+        {trendingContent.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {trendingContent.map((item) => (
+              <ContentCard
+                key={item.id}
+                content={{
+                  id: item.id,
+                  title: item.title,
+                  creator: {
+                    id: item.creator_profiles.id,
+                    name: item.creator_profiles.creator_name,
+                    username: item.creator_profiles.users.username,
+                    avatar:
+                      item.creator_profiles.users.avatar_url ||
+                      "https://i.pravatar.cc/150",
+                    verified: false,
+                  },
+                  thumbnail: item.thumbnail_url || "/content/placeholder.jpg",
+                  category: item.content_type,
+                  price: item.access_price.toString(),
+                  isPremium: item.is_premium,
+                  views: item.views_count,
+                }}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className=" flex justify-center items-center space-x-2">
+            <CircleDashedIcon className="h-6 w-6 animate-spin text-white" />
+            <p className="sen text-white">Loading Trending Content</p>
+          </div>
+        )}
       </section>
     </div>
   );
