@@ -96,40 +96,45 @@ export default function ProfilePage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("handleSubmit");
     if (!primaryWallet?.address) return;
 
     setIsUpdating(true);
     try {
+      console.log("Starting profile update...");
       // Upload avatar if selected
       let avatarUrl = userProfile?.avatar_url || "";
+
+      console.log("Uploading avatar...");
+      const userData = new FormData();
+
+      // Add user data to FormData
+      userData.append("username", formData.username);
+      userData.append("full_name", formData.full_name || "");
+      userData.append("email", formData.email);
+      userData.append("bio", formData.bio || "");
+      userData.append("eth_wallet_address", primaryWallet.address);
+
       if (avatarFile) {
-        const formData = new FormData();
-        formData.append("file", avatarFile);
-        formData.append("wallet", primaryWallet.address);
-        formData.append("contentType", "avatar");
+        userData.append("avatar", avatarFile);
+      } else {
+        userData.append("avatar_url", avatarUrl);
+      }
+      console.log("User data prepared for upload:", userData);
+      const updateProfile = await fetch("/api/users", {
+        method: "POST",
+        body: userData,
+      });
 
-        const uploadResponse = await fetch("/api/upload", {
-          method: "POST",
-          body: formData,
-        });
-
-        if (uploadResponse.ok) {
-          const data = await uploadResponse.json();
-          avatarUrl = data.url;
-        }
+      if (updateProfile.ok) {
+        const data = await updateProfile.json();
+        console.log("User updated successfully:", data);
+      } else {
+        console.error("Failed to upload avatar");
       }
 
-      // TODO: Update user profile
-      // await updateUserProfile(
-      //   {
-      //     ...formData,
-      //     avatar_url: avatarUrl,
-      //   },
-      //   primaryWallet.address
-      // );
-
-      // Clear file input
       setAvatarFile(null);
+      console.log("Profile update completed");
     } catch (error) {
       console.error("Error updating profile:", error);
       toast.error("Failed to update profile");
@@ -255,6 +260,7 @@ export default function ProfilePage() {
                         value={formData.username}
                         onChange={handleInputChange}
                         required
+                        disabled
                       />
                     </div>
 
@@ -275,6 +281,7 @@ export default function ProfilePage() {
                         value={formData.email}
                         onChange={handleInputChange}
                         required
+                        disabled
                       />
                     </div>
 
@@ -389,7 +396,7 @@ export default function ProfilePage() {
                             asChild
                           >
                             <a
-                              href={`https://blockscout.com/electroneum/address/${primaryWallet?.address}`}
+                              href={`https://blockexplorer.electroneum.com/address/${primaryWallet?.address}`}
                               target="_blank"
                               rel="noopener noreferrer"
                             >

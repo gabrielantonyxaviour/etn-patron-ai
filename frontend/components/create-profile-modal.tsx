@@ -78,7 +78,7 @@ export function ProfileCreationModal() {
       }
 
       // Send request to create user endpoint
-      const response = await fetch("/api/upload", {
+      const response = await fetch("/api/users", {
         method: "POST",
         body: userData,
       });
