@@ -644,25 +644,6 @@ export default function CreatorDashboardPage() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="displayName">Display Name</Label>
-                    <Input
-                      id="displayName"
-                      placeholder="Your name or brand"
-                      value={formData.displayName}
-                      onChange={handleInputChange}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="bio">Bio</Label>
-                    <Textarea
-                      id="bio"
-                      placeholder="Tell us about yourself and your content"
-                      value={formData.bio}
-                      onChange={handleInputChange}
-                    />
-                  </div>
-                  <div className="space-y-2">
                     <Label htmlFor="category">Primary Category</Label>
                     <select
                       id="category"
@@ -691,37 +672,6 @@ export default function CreatorDashboardPage() {
                       onChange={handleInputChange}
                       required
                     />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="profileImage">Profile Image</Label>
-                    <div className="border-2 border-dashed rounded-md p-6 flex flex-col items-center justify-center">
-                      <Upload className="h-8 w-8 text-muted-foreground mb-2" />
-                      <p className="text-sm text-muted-foreground mb-2">
-                        Upload your profile image
-                      </p>
-                      <input
-                        type="file"
-                        id="profileImageInput"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={(e) => handleFileChange(e, "profileImage")}
-                      />
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        type="button"
-                        onClick={() =>
-                          document.getElementById("profileImageInput")?.click()
-                        }
-                      >
-                        Select Image
-                      </Button>
-                      {formData.profileImage && (
-                        <p className="text-sm mt-2">
-                          Selected: {formData.profileImage.name}
-                        </p>
-                      )}
-                    </div>
                   </div>
                 </div>
               </CardContent>

@@ -51,7 +51,7 @@ export async function encrypt(dataToEncrypt: string): Promise<{
 
   const { ciphertext, dataToEncryptHash } = await encryptString(
     {
-      evmContractConditions,
+      evmContractConditions: evmContractConditions as any,
       dataToEncrypt,
     },
     litNodeClient

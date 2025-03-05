@@ -103,7 +103,7 @@ export default function ProfilePage() {
     try {
       console.log("Starting profile update...");
       // Upload avatar if selected
-      let avatarUrl = userProfile?.avatar_url || "";
+      const avatarUrl = userProfile?.avatar_url || "";
 
       console.log("Uploading avatar...");
       const userData = new FormData();

@@ -68,7 +68,7 @@ export async function decrypt(
       {
         resource: new LitAccessControlConditionResource(
           await LitAccessControlConditionResource.generateResourceString(
-            evmContractConditions,
+            evmContractConditions as any,
             dataHash
           )
         ),
@@ -102,7 +102,7 @@ export async function decrypt(
         chain: "sepolia",
         ciphertext,
         dataToEncryptHash: dataHash,
-        evmContractConditions,
+        evmContractConditions: evmContractConditions as any,
         sessionSigs,
       },
       litNodeClient

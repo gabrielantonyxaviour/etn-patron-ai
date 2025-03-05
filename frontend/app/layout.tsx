@@ -7,7 +7,6 @@ import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { Toaster } from "@/components/ui/sonner";
 import { EnvironmentStoreProvider } from "@/components/context";
-import { WalletProfileCheck } from "@/components/wallet-profile-check";
 
 const inter = Inter({ subsets: ["latin"] });
 
