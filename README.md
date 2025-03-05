@@ -1,6 +1,6 @@
 # ETN Patron AI
 
-Empowering Creators with Micro-Payments on Electroneum.
+Empowering Creators with Micro-Payments on Electroneum
 
 ## Inspiration
 
