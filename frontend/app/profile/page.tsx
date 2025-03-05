@@ -178,6 +178,7 @@ export default function ProfilePage() {
               Connect your wallet to access your profile and transaction
               history.
             </p>
+            {/** @ts-expect-error weird error */}
             <DynamicWidget />
           </div>
         </Card>

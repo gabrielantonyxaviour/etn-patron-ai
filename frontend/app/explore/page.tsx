@@ -12,6 +12,7 @@ import { CreatorCard } from "@/components/creator-card";
 import { ContentCard } from "@/components/content-card";
 import { Separator } from "@/components/ui/separator";
 import { useSearchParams, useRouter } from "next/navigation";
+import { Suspense } from "react";
 
 // Define types for our data
 interface Creator {
@@ -58,7 +59,7 @@ const CATEGORIES = [
   "Crafts",
 ];
 
-export default function ExplorePage() {
+function Explore() {
   const [activeTab, setActiveTab] = useState("creators");
   const [creators, setCreators] = useState<Creator[]>([]);
   const [content, setContent] = useState<Content[]>([]);
@@ -358,5 +359,13 @@ export default function ExplorePage() {
         )}
       </section>
     </div>
+  );
+}
+
+export default function ExplorePage() {
+  return (
+    <Suspense>
+      <Explore />
+    </Suspense>
   );
 }

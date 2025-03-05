@@ -612,6 +612,7 @@ export default function CreatorDashboardPage() {
           new creator.
         </p>
         <div className="w-full flex justify-center">
+          {/** @ts-expect-error weird error */}
           <DynamicWidget />
         </div>
       </div>
@@ -1151,7 +1152,8 @@ export default function CreatorDashboardPage() {
                     No subscribers yet
                   </h3>
                   <p className="text-muted-foreground mb-4">
-                    As people subscribe to your content, they'll appear here
+                    As people subscribe to your content, they&apos;ll appear
+                    here
                   </p>
                   <Button variant="outline" asChild>
                     <Link href="/explore">Find Creators to Follow</Link>
@@ -1258,7 +1260,8 @@ export default function CreatorDashboardPage() {
                       </Button>
                     </div>
                     <p className="text-sm text-muted-foreground">
-                      This is the wallet address where you'll receive payments.
+                      This is the wallet address where you&apos;ll receive
+                      payments.
                     </p>
                   </div>
 

@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 
+// DELETE Handler
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   const url = new URL(req.url);
   const wallet = url.searchParams.get("wallet");
 
@@ -30,7 +32,7 @@ export async function DELETE(
   const { data: comment } = await supabase
     .from("comments")
     .select("user_id")
-    .eq("id", params.id)
+    .eq("id", id)
     .single();
 
   if (!comment) {
@@ -41,10 +43,7 @@ export async function DELETE(
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
   }
 
-  const { error } = await supabase
-    .from("comments")
-    .delete()
-    .eq("id", params.id);
+  const { error } = await supabase.from("comments").delete().eq("id", id);
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -55,8 +54,9 @@ export async function DELETE(
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   const body = await req.json();
 
   if (!body.wallet || !body.comment_text) {
@@ -81,7 +81,7 @@ export async function PUT(
   const { data: comment } = await supabase
     .from("comments")
     .select("user_id")
-    .eq("id", params.id)
+    .eq("id", id)
     .single();
 
   if (!comment) {
@@ -94,10 +94,8 @@ export async function PUT(
 
   const { data, error } = await supabase
     .from("comments")
-    .update({
-      comment_text: body.comment_text,
-    })
-    .eq("id", params.id)
+    .update({ comment_text: body.comment_text })
+    .eq("id", id)
     .select(
       `
       *,

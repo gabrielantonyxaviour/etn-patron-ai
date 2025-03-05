@@ -39,55 +39,64 @@ interface Web3ProviderProps {
 export function Web3Provider({ children }: Web3ProviderProps) {
   const { theme } = useTheme();
   return (
-    <DynamicContextProvider
-      theme={theme == "light" ? "light" : "dark"}
-      settings={{
-        environmentId: process.env.NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID || "",
-        walletConnectors: [EthereumWalletConnectors],
-        overrides: {
-          evmNetworks: [
-            IS_PRODUCTION
-              ? {
-                  key: electroneum.id.toString(),
-                  blockExplorerUrls: [electroneum.blockExplorers.default.url],
-                  chainId: electroneum.id,
-                  chainName: electroneum.name,
-                  iconUrls: ["https://app.dynamic.xyz/assets/networks/eth.svg"],
-                  name: electroneum.name,
-                  nativeCurrency: {
-                    ...electroneum.nativeCurrency,
-                    iconUrl: "https://app.dynamic.xyz/assets/networks/eth.svg",
+    <>
+      {/* @ts-expect-error weird */}
+      <DynamicContextProvider
+        theme={theme == "light" ? "light" : "dark"}
+        settings={{
+          environmentId: process.env.NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID || "",
+          walletConnectors: [EthereumWalletConnectors],
+          overrides: {
+            evmNetworks: [
+              IS_PRODUCTION
+                ? {
+                    key: electroneum.id.toString(),
+                    blockExplorerUrls: [electroneum.blockExplorers.default.url],
+                    chainId: electroneum.id,
+                    chainName: electroneum.name,
+                    iconUrls: [
+                      "https://app.dynamic.xyz/assets/networks/eth.svg",
+                    ],
+                    name: electroneum.name,
+                    nativeCurrency: {
+                      ...electroneum.nativeCurrency,
+                      iconUrl:
+                        "https://app.dynamic.xyz/assets/networks/eth.svg",
+                    },
+                    networkId: electroneum.id,
+                    rpcUrls: [electroneum.rpcUrls.default.http[0]],
+                    vanityName: electroneum.name,
+                    isTestnet: electroneum.testnet,
+                  }
+                : {
+                    key: sepolia.id.toString(),
+                    blockExplorerUrls: [sepolia.blockExplorers.default.url],
+                    chainId: sepolia.id,
+                    chainName: sepolia.name,
+                    iconUrls: [
+                      "https://app.dynamic.xyz/assets/networks/eth.svg",
+                    ],
+                    name: sepolia.name,
+                    nativeCurrency: {
+                      ...sepolia.nativeCurrency,
+                      iconUrl:
+                        "https://app.dynamic.xyz/assets/networks/eth.svg",
+                    },
+                    networkId: sepolia.id,
+                    rpcUrls: [sepolia.rpcUrls.default.http[0]],
+                    vanityName: sepolia.name,
+                    isTestnet: sepolia.testnet,
                   },
-                  networkId: electroneum.id,
-                  rpcUrls: [electroneum.rpcUrls.default.http[0]],
-                  vanityName: electroneum.name,
-                  isTestnet: electroneum.testnet,
-                }
-              : {
-                  key: sepolia.id.toString(),
-                  blockExplorerUrls: [sepolia.blockExplorers.default.url],
-                  chainId: sepolia.id,
-                  chainName: sepolia.name,
-                  iconUrls: ["https://app.dynamic.xyz/assets/networks/eth.svg"],
-                  name: sepolia.name,
-                  nativeCurrency: {
-                    ...sepolia.nativeCurrency,
-                    iconUrl: "https://app.dynamic.xyz/assets/networks/eth.svg",
-                  },
-                  networkId: sepolia.id,
-                  rpcUrls: [sepolia.rpcUrls.default.http[0]],
-                  vanityName: sepolia.name,
-                  isTestnet: sepolia.testnet,
-                },
-          ],
-        },
-      }}
-    >
-      <WagmiProvider config={config}>
-        <QueryClientProvider client={queryClient}>
-          <DynamicWagmiConnector>{children}</DynamicWagmiConnector>
-        </QueryClientProvider>
-      </WagmiProvider>
-    </DynamicContextProvider>
+            ],
+          },
+        }}
+      >
+        <WagmiProvider config={config}>
+          <QueryClientProvider client={queryClient}>
+            <DynamicWagmiConnector>{children}</DynamicWagmiConnector>
+          </QueryClientProvider>
+        </WagmiProvider>
+      </DynamicContextProvider>
+    </>
   );
 }

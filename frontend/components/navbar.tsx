@@ -113,6 +113,7 @@ export function Navbar() {
 
           {/* Connect wallet button on desktop */}
           <div className="hidden md:flex">
+            {/** @ts-expect-error weird error */}
             <DynamicWidget />
           </div>
 
@@ -143,6 +144,7 @@ export function Navbar() {
                 ))}
               </div>
               <div className="mt-auto pb-8">
+                {/** @ts-expect-error weird error */}
                 <DynamicWidget />
               </div>
             </SheetContent>

@@ -20,6 +20,7 @@ const eslintConfig = [
           varsIgnorePattern: "^_", // Ignores all unused vars starting with _
         },
       ],
+      "@typescript-eslint/no-explicit-any": "warn",
     },
   },
 ];

@@ -193,7 +193,7 @@ export function ProfileCreationModal() {
                 required
               />
               <p className="text-xs text-muted-foreground">
-                We'll never share your email with anyone else.
+                We&apos;ll never share your email with anyone else.
               </p>
             </div>
 

@@ -3,8 +3,10 @@ import { supabase } from "@/lib/supabase";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
+
   const url = new URL(req.url);
   const wallet = url.searchParams.get("wallet");
 
@@ -20,7 +22,7 @@ export async function GET(
       )
     `
     )
-    .eq("id", params.id)
+    .eq("id", id)
     .single();
 
   if (error) {
@@ -66,15 +68,16 @@ export async function GET(
   }
 
   // Increment view count
-  await supabase.rpc("increment_view_count", { content_id: params.id });
+  await supabase.rpc("increment_view_count", { content_id: id });
 
   return NextResponse.json(content);
 }
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   const body = await req.json();
 
   if (!body.wallet_address) {
@@ -95,7 +98,7 @@ export async function PUT(
       )
     `
     )
-    .eq("id", params.id)
+    .eq("id", id)
     .single();
 
   if (contentError) {
@@ -120,7 +123,7 @@ export async function PUT(
       is_premium: body.is_premium,
       access_price: body.access_price,
     })
-    .eq("id", params.id)
+    .eq("id", id)
     .select()
     .single();
 
@@ -133,8 +136,9 @@ export async function PUT(
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   const url = new URL(req.url);
   const wallet = url.searchParams.get("wallet");
 
@@ -156,7 +160,7 @@ export async function DELETE(
       )
     `
     )
-    .eq("id", params.id)
+    .eq("id", id)
     .single();
 
   if (contentError) {
@@ -170,7 +174,7 @@ export async function DELETE(
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
   }
 
-  const { error } = await supabase.from("content").delete().eq("id", params.id);
+  const { error } = await supabase.from("content").delete().eq("id", id);
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
