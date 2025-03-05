@@ -28,7 +28,6 @@ export default function RootLayout({
         <EnvironmentStoreProvider>
           <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
             <Web3Provider>
-              {/* <WalletProfileCheck /> */}
               <Navbar />
               <main className="flex-grow sen">{children}</main>
               <Footer />

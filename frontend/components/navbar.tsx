@@ -18,16 +18,12 @@ import { cn } from "@/lib/utils";
 import { DynamicWidget, useDynamicContext } from "@dynamic-labs/sdk-react-core";
 import { useEnvironmentStore } from "./context";
 import { useEffect } from "react";
+import { WalletProfileCheck } from "./wallet-profile-check";
 
 export function Navbar() {
   const pathname = usePathname();
-  const { primaryWallet } = useDynamicContext();
-  const { fetchUserProfile, setIsProfileModalOpen } = useEnvironmentStore(
-    (state) => ({
-      fetchUserProfile: state.fetchUserProfile,
-      setIsProfileModalOpen: state.setIsProfileModalOpen,
-    })
-  );
+  const { primaryWallet, user } = useDynamicContext();
+  const { setIsProfileModalOpen } = useEnvironmentStore((state) => state);
 
   const routes = [
     {
@@ -149,6 +145,7 @@ export function Navbar() {
           </Sheet>
         </div>
       </div>
+      {primaryWallet && user && <WalletProfileCheck />}
     </header>
   );
 }

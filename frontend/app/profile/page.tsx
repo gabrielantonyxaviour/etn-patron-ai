@@ -25,12 +25,9 @@ import Link from "next/link";
 
 export default function ProfilePage() {
   const { primaryWallet } = useDynamicContext();
-  const { userProfile, isProfileLoading, updateUserProfile } =
-    useEnvironmentStore((state) => ({
-      userProfile: state.userProfile,
-      isProfileLoading: state.isProfileLoading,
-      updateUserProfile: state.updateUserProfile,
-    }));
+  const { userProfile, isProfileLoading } = useEnvironmentStore(
+    (state) => state
+  );
 
   const [isUpdating, setIsUpdating] = useState(false);
   const [formData, setFormData] = useState({
@@ -76,8 +73,8 @@ export default function ProfilePage() {
     };
 
     fetchTransactions();
+    // Remove the comma that was after fetchTransactions()
   }, [primaryWallet?.address]);
-
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
@@ -122,14 +119,14 @@ export default function ProfilePage() {
         }
       }
 
-      // Update user profile
-      await updateUserProfile(
-        {
-          ...formData,
-          avatar_url: avatarUrl,
-        },
-        primaryWallet.address
-      );
+      // TODO: Update user profile
+      // await updateUserProfile(
+      //   {
+      //     ...formData,
+      //     avatar_url: avatarUrl,
+      //   },
+      //   primaryWallet.address
+      // );
 
       // Clear file input
       setAvatarFile(null);
