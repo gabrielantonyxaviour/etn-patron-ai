@@ -612,7 +612,6 @@ export default function CreatorDashboardPage() {
           new creator.
         </p>
         <div className="w-full flex justify-center">
-          {/** @ts-expect-error weird error */}
           <DynamicWidget />
         </div>
       </div>

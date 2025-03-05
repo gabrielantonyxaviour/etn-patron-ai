@@ -61,17 +61,17 @@ export function Navbar() {
       active: pathname === "/profile",
     },
   ];
-  useEffect(() => {
-    const checkUserProfile = async () => {
-      if (!primaryWallet?.address) return;
-      const hasProfile = await fetchUserProfile(primaryWallet.address);
-      if (!hasProfile) {
-        setIsProfileModalOpen(true);
-      }
-    };
+  // useEffect(() => {
+  //   const checkUserProfile = async () => {
+  //     if (!primaryWallet?.address) return;
+  //     const hasProfile = await fetchUserProfile(primaryWallet.address);
+  //     if (!hasProfile) {
+  //       setIsProfileModalOpen(true);
+  //     }
+  //   };
 
-    checkUserProfile();
-  }, [primaryWallet?.address, fetchUserProfile, setIsProfileModalOpen]);
+  //   checkUserProfile();
+  // }, [primaryWallet?.address, fetchUserProfile, setIsProfileModalOpen]);
 
   return (
     <header className="sen sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -113,7 +113,6 @@ export function Navbar() {
 
           {/* Connect wallet button on desktop */}
           <div className="hidden md:flex">
-            {/** @ts-expect-error weird error */}
             <DynamicWidget />
           </div>
 
@@ -144,7 +143,6 @@ export function Navbar() {
                 ))}
               </div>
               <div className="mt-auto pb-8">
-                {/** @ts-expect-error weird error */}
                 <DynamicWidget />
               </div>
             </SheetContent>

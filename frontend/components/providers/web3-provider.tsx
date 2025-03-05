@@ -40,7 +40,6 @@ export function Web3Provider({ children }: Web3ProviderProps) {
   const { theme } = useTheme();
   return (
     <>
-      {/* @ts-expect-error weird */}
       <DynamicContextProvider
         theme={theme == "light" ? "light" : "dark"}
         settings={{
