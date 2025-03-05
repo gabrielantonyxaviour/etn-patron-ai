@@ -6,6 +6,8 @@ import { Web3Provider } from "@/components/providers/web3-provider";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { Toaster } from "@/components/ui/sonner";
+import { EnvironmentStoreProvider } from "@/components/context";
+import { WalletProfileCheck } from "@/components/wallet-profile-check";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -23,14 +25,17 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.className} min-h-screen flex flex-col`}>
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
-          <Web3Provider>
-            <Navbar />
-            <main className="flex-grow sen">{children}</main>
-            <Footer />
-            <Toaster />
-          </Web3Provider>
-        </ThemeProvider>
+        <EnvironmentStoreProvider>
+          <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
+            <Web3Provider>
+              <WalletProfileCheck />
+              <Navbar />
+              <main className="flex-grow sen">{children}</main>
+              <Footer />
+              <Toaster />
+            </Web3Provider>
+          </ThemeProvider>
+        </EnvironmentStoreProvider>
       </body>
     </html>
   );

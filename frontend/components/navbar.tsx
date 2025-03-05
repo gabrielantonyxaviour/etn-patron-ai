@@ -15,10 +15,19 @@ import {
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
-import { DynamicWidget } from "@dynamic-labs/sdk-react-core";
+import { DynamicWidget, useDynamicContext } from "@dynamic-labs/sdk-react-core";
+import { useEnvironmentStore } from "./context";
+import { useEffect } from "react";
 
 export function Navbar() {
   const pathname = usePathname();
+  const { primaryWallet } = useDynamicContext();
+  const { fetchUserProfile, setIsProfileModalOpen } = useEnvironmentStore(
+    (state) => ({
+      fetchUserProfile: state.fetchUserProfile,
+      setIsProfileModalOpen: state.setIsProfileModalOpen,
+    })
+  );
 
   const routes = [
     {
@@ -52,6 +61,17 @@ export function Navbar() {
       active: pathname === "/profile",
     },
   ];
+  useEffect(() => {
+    const checkUserProfile = async () => {
+      if (!primaryWallet?.address) return;
+      const hasProfile = await fetchUserProfile(primaryWallet.address);
+      if (!hasProfile) {
+        setIsProfileModalOpen(true);
+      }
+    };
+
+    checkUserProfile();
+  }, [primaryWallet?.address, fetchUserProfile, setIsProfileModalOpen]);
 
   return (
     <header className="sen sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
