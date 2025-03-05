@@ -65,6 +65,7 @@ export default function ExplorePage() {
   const [trendingContent, setTrendingContent] = useState<Content[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [isTrendingLoading, setIsTrendingLoading] = useState(true);
 
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -139,11 +140,13 @@ export default function ExplorePage() {
           const sorted = [...data.content].sort(
             (a, b) => b.views_count - a.views_count
           );
+
           setTrendingContent(sorted);
         }
       } catch (error) {
         console.error("Error fetching trending content:", error);
       }
+      setIsTrendingLoading(false);
     }
 
     fetchTrendingContent();
@@ -343,10 +346,14 @@ export default function ExplorePage() {
               />
             ))}
           </div>
-        ) : (
+        ) : isTrendingLoading ? (
           <div className=" flex justify-center items-center space-x-2">
             <CircleDashedIcon className="h-6 w-6 animate-spin text-white" />
             <p className="sen text-white">Loading Trending Content</p>
+          </div>
+        ) : (
+          <div className="text-center p-8">
+            No content found. Try adjusting your search.
           </div>
         )}
       </section>
