@@ -133,6 +133,7 @@ export default function CreatorDashboardPage() {
 
   // State for API data
   const [isLoading, setIsLoading] = useState(true);
+  const [isCreateProfileLoading, setIsCreateProfileLoading] = useState(false);
   const [isRegistered, setIsRegistered] = useState(false);
   const [creatorProfile, setCreatorProfile] = useState<CreatorProfile | null>(
     null
@@ -405,7 +406,7 @@ export default function CreatorDashboardPage() {
     }
 
     try {
-      setIsLoading(true);
+      setIsCreateProfileLoading(true);
 
       // Upload profile image if selected
       let profileImageUrl = "";
@@ -462,9 +463,11 @@ export default function CreatorDashboardPage() {
       }
     } catch (error) {
       console.error("Error registering creator:", error);
-      toast.error("Failed to create your creator profile. Please try again.");
+      toast.error("Create Profile Error", {
+        description: "Failed to create your creator profile. Please try again.",
+      });
     } finally {
-      setIsLoading(false);
+      setIsCreateProfileLoading(false);
     }
   };
 
@@ -684,8 +687,6 @@ export default function CreatorDashboardPage() {
                     <Input
                       id="basicPrice"
                       type="number"
-                      min="1"
-                      step="0.1"
                       value={formData.basicPrice}
                       onChange={handleInputChange}
                       required
@@ -725,8 +726,14 @@ export default function CreatorDashboardPage() {
                 </div>
               </CardContent>
               <CardFooter>
-                <Button className="w-full" type="submit" disabled={isLoading}>
-                  {isLoading ? "Registering..." : "Register as Creator"}
+                <Button
+                  className="w-full"
+                  type="submit"
+                  disabled={isCreateProfileLoading}
+                >
+                  {isCreateProfileLoading
+                    ? "Registering..."
+                    : "Register as Creator"}
                 </Button>
               </CardFooter>
             </form>
@@ -1292,8 +1299,6 @@ export default function CreatorDashboardPage() {
                       <Input
                         id="basicPrice"
                         type="number"
-                        min="1"
-                        step="0.1"
                         value={formData.basicPrice}
                         onChange={handleInputChange}
                         required
@@ -1307,8 +1312,6 @@ export default function CreatorDashboardPage() {
                       <Input
                         id="premiumPrice"
                         type="number"
-                        min="1"
-                        step="0.1"
                         value={formData.premiumPrice}
                         onChange={handleInputChange}
                       />
