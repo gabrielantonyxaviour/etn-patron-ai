@@ -21,8 +21,8 @@ export default function NotFound() {
       </h1>
 
       <p className="text-xl text-muted-foreground mb-8 max-w-md">
-        Oops! The content you're looking for seems to have disappeared into the
-        blockchain.
+        Oops! The content you&apos;re looking for seems to have disappeared into
+        the blockchain.
       </p>
 
       <div className="flex flex-col sm:flex-row gap-4 w-full max-w-md mx-auto">
