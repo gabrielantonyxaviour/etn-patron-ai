@@ -47,15 +47,14 @@ import { StatCard } from "@/components/stat-card";
 import { DynamicWidget, useDynamicContext } from "@dynamic-labs/sdk-react-core";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
+import { useEnvironmentStore } from "@/components/context";
 
 // Types
 interface CreatorProfile {
   id: string;
-  creator_name: string;
   category: string;
   created_at: string;
   subscription_price: number;
-  etn_payment_address: string;
   banner_url: string;
   social_links: {
     twitter?: string;
@@ -130,6 +129,7 @@ interface DashboardMetrics {
 export default function CreatorDashboardPage() {
   const { address } = useWeb3Modal();
   const { user, primaryWallet } = useDynamicContext();
+  const { userProfile } = useEnvironmentStore((store) => store);
 
   // State for API data
   const [isLoading, setIsLoading] = useState(true);
@@ -150,14 +150,22 @@ export default function CreatorDashboardPage() {
     totalLikes: 0,
   });
 
-  // Form states
-  const [formData, setFormData] = useState({
-    username: "",
-    displayName: "",
-    bio: "",
+  // Form states for create profile
+  const [createProfileForm, setCreateProfileForm] = useState({
     category: "",
-    basicPrice: "10",
-    premiumPrice: "25",
+    subscriptionPrice: "10",
+    twitter: "",
+    instagram: "",
+    bannerImage: null as File | null,
+  });
+
+  // Form states for settings
+  const [settingsForm, setSettingsForm] = useState({
+    displayName: "",
+    username: "",
+    bio: "",
+    basicPrice: "",
+    premiumPrice: "",
     twitter: "",
     instagram: "",
     profileImage: null as File | null,
@@ -180,12 +188,11 @@ export default function CreatorDashboardPage() {
             setIsRegistered(true);
             setCreatorProfile(data);
 
-            // Initialize form with creator data
-            setFormData({
-              username: data.users.username || "",
-              displayName: data.creator_name || "",
-              bio: data.bio || "",
-              category: data.category || "",
+            // Initialize settings form with creator data
+            setSettingsForm({
+              displayName: userProfile?.full_name || "",
+              username: userProfile?.username || "",
+              bio: userProfile?.bio || "",
               basicPrice: data.subscription_price
                 ? data.subscription_price.toString()
                 : "10",
@@ -210,7 +217,7 @@ export default function CreatorDashboardPage() {
     }
 
     checkCreatorStatus();
-  }, [primaryWallet?.address]);
+  }, [primaryWallet?.address, userProfile]);
 
   // Fetch creator content
   useEffect(() => {
@@ -371,26 +378,50 @@ export default function CreatorDashboardPage() {
     };
   };
 
-  // Handle form changes
-  const handleInputChange = (
+  // Handle create profile form changes
+  const handleCreateProfileInputChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
     >
   ) => {
     const { id, value } = e.target;
-    setFormData((prev) => ({
+    setCreateProfileForm((prev) => ({
       ...prev,
       [id]: value,
     }));
   };
 
-  // Handle file changes
-  const handleFileChange = (
+  // Handle settings form changes
+  const handleSettingsInputChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
+  ) => {
+    const { id, value } = e.target;
+    setSettingsForm((prev) => ({
+      ...prev,
+      [id]: value,
+    }));
+  };
+
+  // Handle banner image change for create profile
+  const handleCreateProfileBannerChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = e.target.files?.[0] || null;
+    setCreateProfileForm((prev) => ({
+      ...prev,
+      bannerImage: file,
+    }));
+  };
+
+  // Handle file changes for settings
+  const handleSettingsFileChange = (
     e: React.ChangeEvent<HTMLInputElement>,
     fileType: "profileImage" | "bannerImage"
   ) => {
     const file = e.target.files?.[0] || null;
-    setFormData((prev) => ({
+    setSettingsForm((prev) => ({
       ...prev,
       [fileType]: file,
     }));
@@ -408,24 +439,22 @@ export default function CreatorDashboardPage() {
     try {
       setIsCreateProfileLoading(true);
 
-      // Upload profile image if selected
-      let profileImageUrl = "";
-      if (formData.profileImage) {
-        const imageFormData = new FormData();
-        imageFormData.append("file", formData.profileImage);
-        imageFormData.append("wallet", primaryWallet.address);
-        imageFormData.append("contentType", "profile");
+      // Upload banner image if selected
+      let bannerUrl = "";
+      if (createProfileForm.bannerImage) {
+        const bannerFormData = new FormData();
+        bannerFormData.append("file", createProfileForm.bannerImage);
+        bannerFormData.append("wallet", primaryWallet.address);
+        bannerFormData.append("contentType", "banner");
 
         const uploadResponse = await fetch("/api/upload", {
           method: "POST",
-          body: imageFormData,
+          body: bannerFormData,
         });
 
         if (uploadResponse.ok) {
           const uploadData = await uploadResponse.json();
-          profileImageUrl = uploadData.url;
-        } else {
-          throw new Error("Failed to upload profile image");
+          bannerUrl = uploadData.url;
         }
       }
 
@@ -438,15 +467,15 @@ export default function CreatorDashboardPage() {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            creator_name: formData.displayName,
-            category: formData.category,
-            subscription_price: parseFloat(formData.basicPrice),
+            category: createProfileForm.category,
+            subscription_price: parseFloat(createProfileForm.subscriptionPrice),
             etn_payment_address: primaryWallet.address,
-            bio: formData.bio,
+            bio: userProfile?.bio || "",
             wallet_address: primaryWallet.address,
+            banner_url: bannerUrl,
             social_links: {
-              twitter: formData.twitter,
-              instagram: formData.instagram,
+              twitter: createProfileForm.twitter,
+              instagram: createProfileForm.instagram,
             },
           }),
         }
@@ -484,10 +513,10 @@ export default function CreatorDashboardPage() {
       setIsLoading(true);
 
       // Upload profile image if selected
-      let profileImageUrl = creatorProfile.users.avatar_url;
-      if (formData.profileImage) {
+      let profileImageUrl = userProfile?.avatar_url || "";
+      if (settingsForm.profileImage) {
         const imageFormData = new FormData();
-        imageFormData.append("file", formData.profileImage);
+        imageFormData.append("file", settingsForm.profileImage);
         imageFormData.append("wallet", primaryWallet.address);
         imageFormData.append("contentType", "profile");
 
@@ -516,9 +545,9 @@ export default function CreatorDashboardPage() {
 
       // Upload banner image if selected
       let bannerUrl = creatorProfile.banner_url;
-      if (formData.bannerImage) {
+      if (settingsForm.bannerImage) {
         const bannerFormData = new FormData();
-        bannerFormData.append("file", formData.bannerImage);
+        bannerFormData.append("file", settingsForm.bannerImage);
         bannerFormData.append("wallet", primaryWallet.address);
         bannerFormData.append("contentType", "banner");
 
@@ -542,15 +571,15 @@ export default function CreatorDashboardPage() {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            creator_name: formData.displayName,
-            category: formData.category,
-            subscription_price: parseFloat(formData.basicPrice),
-            bio: formData.bio,
+            creator_name: settingsForm.displayName || userProfile?.full_name,
+            category: settingsForm.category,
+            subscription_price: parseFloat(settingsForm.basicPrice),
+            bio: settingsForm.bio,
             wallet_address: primaryWallet.address,
             banner_url: bannerUrl,
             social_links: {
-              twitter: formData.twitter,
-              instagram: formData.instagram,
+              twitter: settingsForm.twitter,
+              instagram: settingsForm.instagram,
             },
           }),
         }
@@ -564,7 +593,9 @@ export default function CreatorDashboardPage() {
         },
         body: JSON.stringify({
           eth_wallet_address: primaryWallet.address,
-          username: formData.username,
+          username: settingsForm.username,
+          bio: settingsForm.bio,
+          full_name: settingsForm.displayName,
         }),
       });
 
@@ -574,8 +605,9 @@ export default function CreatorDashboardPage() {
           ...data,
           users: {
             ...creatorProfile.users,
-            username: formData.username,
+            username: settingsForm.username,
             avatar_url: profileImageUrl,
+            full_name: settingsForm.displayName,
           },
         });
 
@@ -638,18 +670,145 @@ export default function CreatorDashboardPage() {
                     <Input
                       id="username"
                       placeholder="Choose a unique username"
-                      value={formData.username}
-                      onChange={handleInputChange}
+                      value={userProfile?.username || ""}
                       required
+                      disabled
                     />
                   </div>
+
+                  <div className="space-y-2">
+                    <Label>Profile Image</Label>
+                    <div className="flex items-center gap-4">
+                      <Avatar className="w-20 h-20">
+                        <AvatarImage
+                          src={userProfile?.avatar_url || "https://i.pravatar.cc/298"}
+                          alt="Profile"
+                        />
+                        <AvatarFallback>
+                          {userProfile?.username
+                            ?.substring(0, 2)
+                            .toUpperCase() || "U"}
+                        </AvatarFallback>
+                      </Avatar>
+                      <input
+                        type="file"
+                        id="profileImageInput"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => handleSettingsFileChange(e, "profileImage")}
+                      />
+                      <Button
+                        variant="outline"
+                        className="gap-2"
+                        type="button"
+                        onClick={() =>
+                          document.getElementById("profileImageInput")?.click()
+                        }
+                      >
+                        <Upload className="h-4 w-4" />
+                        Upload New Image
+                      </Button>
+                      {settingsForm.profileImage && (
+                        <p className="text-sm">
+                          Selected: {settingsForm.profileImage.name}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Banner Image</Label>
+                    <div className="h-32 bg-muted rounded-md relative overflow-hidden">
+                      {creatorProfile?.banner_url ? (
+                        <img
+                          src={creatorProfile.banner_url}
+                          alt="Banner"
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="flex items-center justify-center h-full">
+                          <p className="text-muted-foreground text-sm">
+                            No banner image
+                          </p>
+                        </div>
+                      )}
+                      <input
+                        type="file"
+                        id="bannerImageInput"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => handleSettingsFileChange(e, "bannerImage")}
+                      />
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="absolute bottom-2 right-2 gap-2"
+                        type="button"
+                        onClick={() =>
+                          document.getElementById("bannerImageInput")?.click()
+                        }
+                      >
+                        <Upload className="h-4 w-4" />
+                        Change Banner
+                      </Button>
+                      {settingsForm.bannerImage && (
+                        <div className="absolute bottom-2 left-2 bg-background/80 px-2 py-1 rounded text-xs">
+                          Selected: {settingsForm.bannerImage.name}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+              <CardFooter className="flex flex-col sm:flex-row gap-2">
+                <Button
+                  className="w-full sm:w-auto"
+                  type="submit"
+                  disabled={isLoading}
+                >
+                  {isLoading ? "Saving..." : "Save Changes"}
+                </Button>
+                <Button
+                  variant="outline"
+                  className="w-full sm:w-auto"
+                  type="button"
+                  onClick={() => {
+                    // Reset form to current profile values
+                    if (creatorProfile && userProfile) {
+                      setSettingsForm({
+                        displayName: userProfile.full_name || "",
+                        username: userProfile.username || "",
+                        bio: userProfile.bio || "",
+                        category: creatorProfile.category,
+                        basicPrice: creatorProfile.subscription_price.toString(),
+                        premiumPrice: (
+                          creatorProfile.subscription_price * 2.5
+                        ).toString(),
+                        twitter: creatorProfile.social_links?.twitter || "",
+                        instagram: creatorProfile.social_links?.instagram || "",
+                        profileImage: null,
+                        bannerImage: null,
+                      });
+                    }
+                  }}
+                >
+                  Cancel
+                </Button>
+              </CardFooter>
+            </form>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}
                   <div className="space-y-2">
                     <Label htmlFor="category">Primary Category</Label>
                     <select
                       id="category"
                       className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                      value={formData.category}
-                      onChange={handleInputChange}
+                      value={createProfileForm.category}
+                      onChange={handleCreateProfileInputChange}
                       required
                     >
                       <option value="">Select a category</option>
@@ -664,14 +823,63 @@ export default function CreatorDashboardPage() {
                     </select>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="basicPrice">Subscription Price (ETN)</Label>
+                    <Label htmlFor="subscriptionPrice">
+                      Subscription Price (in ETN)
+                    </Label>
                     <Input
-                      id="basicPrice"
+                      id="subscriptionPrice"
                       type="number"
-                      value={formData.basicPrice}
-                      onChange={handleInputChange}
+                      value={createProfileForm.subscriptionPrice}
+                      onChange={handleCreateProfileInputChange}
                       required
                     />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="twitter">Twitter</Label>
+                    <Input
+                      id="twitter"
+                      placeholder="@username"
+                      value={createProfileForm.twitter}
+                      onChange={handleCreateProfileInputChange}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="instagram">Instagram</Label>
+                    <Input
+                      id="instagram"
+                      placeholder="@username"
+                      value={createProfileForm.instagram}
+                      onChange={handleCreateProfileInputChange}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="bannerImage">Banner Image</Label>
+                    <div className="h-32 bg-muted rounded-md relative overflow-hidden">
+                      <input
+                        type="file"
+                        id="bannerImageInput"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleCreateProfileBannerChange}
+                      />
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 gap-2"
+                        type="button"
+                        onClick={() =>
+                          document.getElementById("bannerImageInput")?.click()
+                        }
+                      >
+                        <Upload className="h-4 w-4" />
+                        Upload Banner
+                      </Button>
+                      {createProfileForm.bannerImage && (
+                        <div className="absolute bottom-2 left-2 bg-background/80 px-2 py-1 rounded text-xs">
+                          Selected: {createProfileForm.bannerImage.name}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               </CardContent>
@@ -746,7 +954,7 @@ export default function CreatorDashboardPage() {
           </Dialog>
 
           <Button variant="outline" asChild>
-            <Link href={`/profile/${creatorProfile?.users.username}`}>
+            <Link href={`/profile/${userProfile?.username}`}>
               <Eye className="h-4 w-4 mr-2" />
               View Profile
             </Link>
@@ -869,272 +1077,6 @@ export default function CreatorDashboardPage() {
                         </div>
                         <div>
                           <div className="flex items-center gap-2">
-                            <h3 className="font-medium">{item.title}</h3>
-                            <Badge variant="secondary">
-                              {item.is_premium ? "Premium" : "Free"}
-                            </Badge>
-                          </div>
-                          <div className="flex items-center gap-2 mt-1">
-                            <span className="text-sm text-muted-foreground">
-                              Published{" "}
-                              {formatDistanceToNow(new Date(item.created_at))}{" "}
-                              ago
-                            </span>
-                            <Badge variant="outline" className="text-xs">
-                              {item.content_type}
-                            </Badge>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-6">
-                        <div className="text-right">
-                          <p className="text-sm font-medium">Views</p>
-                          <p className="text-muted-foreground">
-                            {item.views_count}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-sm font-medium">Earnings</p>
-                          <p className="text-muted-foreground">
-                            {(item.is_premium
-                              ? item.access_price *
-                                Math.floor(item.views_count / 3)
-                              : 0
-                            ).toFixed(2)}{" "}
-                            ETN
-                          </p>
-                        </div>
-                        <Button variant="ghost" size="icon" asChild>
-                          <Link href={`/content/edit/${item.id}`}>
-                            <ChevronRight className="h-4 w-4" />
-                          </Link>
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-            {content.length > 0 && (
-              <CardFooter>
-                <Button variant="outline" className="w-full">
-                  View All Content
-                </Button>
-              </CardFooter>
-            )}
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="earnings">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle>Earnings Overview</CardTitle>
-                <CardDescription>
-                  Track your earnings from content purchases, subscriptions, and
-                  tips.
-                </CardDescription>
-              </div>
-              <Button variant="outline" size="sm" className="gap-2">
-                <Download className="h-4 w-4" />
-                Export Data
-              </Button>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
-                <Card className="bg-muted/50">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-base">This Month</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">
-                      {earningsData.thisMonth.toFixed(2)} ETN
-                    </div>
-                    <p className="text-xs text-muted-foreground flex items-center mt-1">
-                      {earningsData.percentChange > 0 ? (
-                        <TrendingUp className="h-3 w-3 text-green-500 mr-1" />
-                      ) : (
-                        <TrendingUp className="h-3 w-3 text-red-500 mr-1 transform rotate-180" />
-                      )}
-                      <span
-                        className={
-                          earningsData.percentChange > 0
-                            ? "text-green-500"
-                            : "text-red-500"
-                        }
-                      >
-                        {earningsData.percentChange > 0 ? "+" : ""}
-                        {earningsData.percentChange.toFixed(0)}% from last month
-                      </span>
-                    </p>
-                  </CardContent>
-                </Card>
-
-                <Card className="bg-muted/50">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-base">Last Month</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">
-                      {earningsData.lastMonth.toFixed(2)} ETN
-                    </div>
-                    <p className="text-xs text-muted-foreground flex items-center mt-1">
-                      <Calendar className="h-3 w-3 mr-1" />
-                      <span>
-                        {new Date().getMonth() === 0
-                          ? "December"
-                          : new Date(
-                              0,
-                              new Date().getMonth() - 1
-                            ).toLocaleString("default", { month: "long" })}{" "}
-                        {new Date().getFullYear()}
-                      </span>
-                    </p>
-                  </CardContent>
-                </Card>
-
-                <Card className="bg-muted/50">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-base">All Time</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">
-                      {dashboardMetrics.totalEarnings.toFixed(2)} ETN
-                    </div>
-                    <p className="text-xs text-muted-foreground flex items-center mt-1">
-                      <Calendar className="h-3 w-3 mr-1" />
-                      <span>
-                        Since{" "}
-                        {new Date(
-                          creatorProfile?.created_at || new Date()
-                        ).toLocaleDateString()}
-                      </span>
-                    </p>
-                  </CardContent>
-                </Card>
-              </div>
-
-              <div className="h-80 w-full bg-muted/50 rounded-md flex items-center justify-center mb-6">
-                {/* In a real app, this would be a chart component */}
-                <p className="text-muted-foreground">
-                  Earnings chart will appear here
-                </p>
-              </div>
-
-              <h3 className="text-lg font-medium mb-4">Earnings by Source</h3>
-              <div className="space-y-4">
-                <div className="flex justify-between items-center p-4 border rounded-lg">
-                  <div>
-                    <h4 className="font-medium">Content Purchases</h4>
-                    <p className="text-sm text-muted-foreground">
-                      Revenue from premium content
-                    </p>
-                  </div>
-                  <p className="font-medium">
-                    {earningsBySource.contentPurchases.toFixed(2)} ETN
-                  </p>
-                </div>
-
-                <div className="flex justify-between items-center p-4 border rounded-lg">
-                  <div>
-                    <h4 className="font-medium">Subscriptions</h4>
-                    <p className="text-sm text-muted-foreground">
-                      Monthly subscriber revenue
-                    </p>
-                  </div>
-                  <p className="font-medium">
-                    {earningsBySource.subscriptions.toFixed(2)} ETN
-                  </p>
-                </div>
-
-                <div className="flex justify-between items-center p-4 border rounded-lg">
-                  <div>
-                    <h4 className="font-medium">Tips</h4>
-                    <p className="text-sm text-muted-foreground">
-                      Voluntary contributions from fans
-                    </p>
-                  </div>
-                  <p className="font-medium">
-                    {earningsBySource.tips.toFixed(2)} ETN
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-            <CardFooter>
-              <Button variant="outline" className="w-full gap-2">
-                <Download className="h-4 w-4" />
-                Download Earnings Report
-              </Button>
-            </CardFooter>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="subscribers">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle>Subscriber Management</CardTitle>
-                <CardDescription>
-                  View and manage your subscribers.
-                </CardDescription>
-              </div>
-              <div className="flex items-center gap-2">
-                <Label htmlFor="filter-subscribers" className="sr-only">
-                  Filter
-                </Label>
-                <select
-                  id="filter-subscribers"
-                  className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                >
-                  <option value="all">All Subscribers</option>
-                  <option value="recent">Recent Subscribers</option>
-                  <option value="basic">Basic Tier</option>
-                  <option value="premium">Premium Tier</option>
-                </select>
-              </div>
-            </CardHeader>
-            <CardContent>
-              {subscribers.length === 0 ? (
-                <div className="text-center py-12">
-                  <Users className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-                  <h3 className="text-lg font-medium mb-2">
-                    No subscribers yet
-                  </h3>
-                  <p className="text-muted-foreground mb-4">
-                    As people subscribe to your content, they&apos;ll appear
-                    here
-                  </p>
-                  <Button variant="outline" asChild>
-                    <Link href="/explore">Find Creators to Follow</Link>
-                  </Button>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {subscribers.map((subscriber) => (
-                    <div
-                      key={subscriber.id}
-                      className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
-                    >
-                      <div className="flex items-center gap-4">
-                        <Avatar className="h-10 w-10">
-                          <AvatarImage
-                            src={
-                              subscriber.users.avatar_url ||
-                              "/subscribers/placeholder.jpg"
-                            }
-                          />
-                          <AvatarFallback>
-                            {subscriber.users.username
-                              .substring(0, 2)
-                              .toUpperCase()}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <h3 className="font-medium">
-                            {subscriber.users.full_name ||
-                              subscriber.users.username}
-                          </h3>
-                          <div className="flex items-center gap-2">
                             <p className="text-sm text-muted-foreground">
                               Subscribed since{" "}
                               {new Date(
@@ -1220,8 +1162,8 @@ export default function CreatorDashboardPage() {
                     <Label htmlFor="displayName">Display Name</Label>
                     <Input
                       id="displayName"
-                      value={formData.displayName}
-                      onChange={handleInputChange}
+                      value={settingsForm.displayName}
+                      onChange={handleSettingsInputChange}
                       required
                     />
                   </div>
@@ -1230,8 +1172,8 @@ export default function CreatorDashboardPage() {
                     <Label htmlFor="username">Username</Label>
                     <Input
                       id="username"
-                      value={formData.username}
-                      onChange={handleInputChange}
+                      value={settingsForm.username}
+                      onChange={handleSettingsInputChange}
                       required
                     />
                   </div>
@@ -1240,8 +1182,8 @@ export default function CreatorDashboardPage() {
                     <Label htmlFor="bio">Bio</Label>
                     <Textarea
                       id="bio"
-                      value={formData.bio}
-                      onChange={handleInputChange}
+                      value={settingsForm.bio}
+                      onChange={handleSettingsInputChange}
                     />
                   </div>
 
@@ -1251,8 +1193,8 @@ export default function CreatorDashboardPage() {
                       <Input
                         id="basicPrice"
                         type="number"
-                        value={formData.basicPrice}
-                        onChange={handleInputChange}
+                        value={settingsForm.basicPrice}
+                        onChange={handleSettingsInputChange}
                         required
                       />
                     </div>
@@ -1264,8 +1206,8 @@ export default function CreatorDashboardPage() {
                       <Input
                         id="premiumPrice"
                         type="number"
-                        value={formData.premiumPrice}
-                        onChange={handleInputChange}
+                        value={settingsForm.premiumPrice}
+                        onChange={handleSettingsInputChange}
                       />
                     </div>
                   </div>
@@ -1280,8 +1222,8 @@ export default function CreatorDashboardPage() {
                         <Input
                           id="twitter"
                           placeholder="@username"
-                          value={formData.twitter}
-                          onChange={handleInputChange}
+                          value={settingsForm.twitter}
+                          onChange={handleSettingsInputChange}
                         />
                       </div>
                       <div className="space-y-2">
@@ -1291,140 +1233,50 @@ export default function CreatorDashboardPage() {
                         <Input
                           id="instagram"
                           placeholder="@username"
-                          value={formData.instagram}
-                          onChange={handleInputChange}
+                          value={settingsForm.instagram}
+                          onChange={handleSettingsInputChange}
                         />
                       </div>
                     </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Profile Image</Label>
-                    <div className="flex items-center gap-4">
-                      <Avatar className="w-20 h-20">
-                        <AvatarImage
-                          src={
-                            creatorProfile?.users.avatar_url ||
-                            "https://i.pravatar.cc/298"
-                          }
-                          alt="Profile"
-                        />
-                        <AvatarFallback>
-                          {creatorProfile?.users.username
-                            .substring(0, 2)
-                            .toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <input
-                        type="file"
-                        id="profileImageInput"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={(e) => handleFileChange(e, "profileImage")}
-                      />
-                      <Button
-                        variant="outline"
-                        className="gap-2"
-                        type="button"
-                        onClick={() =>
-                          document.getElementById("profileImageInput")?.click()
-                        }
-                      >
-                        <Upload className="h-4 w-4" />
-                        Upload New Image
-                      </Button>
-                      {formData.profileImage && (
-                        <p className="text-sm">
-                          Selected: {formData.profileImage.name}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Banner Image</Label>
-                    <div className="h-32 bg-muted rounded-md relative overflow-hidden">
-                      {creatorProfile?.banner_url ? (
-                        <img
-                          src={creatorProfile.banner_url}
-                          alt="Banner"
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="flex items-center justify-center h-full">
-                          <p className="text-muted-foreground text-sm">
-                            No banner image
+                  </div>">
+                            <h3 className="font-medium">{item.title}</h3>
+                            <Badge variant="secondary">
+                              {item.is_premium ? "Premium" : "Free"}
+                            </Badge>
+                          </div>
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className="text-sm text-muted-foreground">
+                              Published{" "}
+                              {formatDistanceToNow(new Date(item.created_at))}{" "}
+                              ago
+                            </span>
+                            <Badge variant="outline" className="text-xs">
+                              {item.content_type}
+                            </Badge>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-6">
+                        <div className="text-right">
+                          <p className="text-sm font-medium">Views</p>
+                          <p className="text-muted-foreground">
+                            {item.views_count}
                           </p>
                         </div>
-                      )}
-                      <input
-                        type="file"
-                        id="bannerImageInput"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={(e) => handleFileChange(e, "bannerImage")}
-                      />
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="absolute bottom-2 right-2 gap-2"
-                        type="button"
-                        onClick={() =>
-                          document.getElementById("bannerImageInput")?.click()
-                        }
-                      >
-                        <Upload className="h-4 w-4" />
-                        Change Banner
-                      </Button>
-                      {formData.bannerImage && (
-                        <div className="absolute bottom-2 left-2 bg-background/80 px-2 py-1 rounded text-xs">
-                          Selected: {formData.bannerImage.name}
+                        <div className="text-right">
+                          <p className="text-sm font-medium">Earnings</p>
+                          <p className="text-muted-foreground">
+                            {(item.is_premium
+                              ? item.access_price *
+                                Math.floor(item.views_count / 3)
+                              : 0
+                            ).toFixed(2)}{" "}
+                            ETN
+                          </p>
                         </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-              <CardFooter className="flex flex-col sm:flex-row gap-2">
-                <Button
-                  className="w-full sm:w-auto"
-                  type="submit"
-                  disabled={isLoading}
-                >
-                  {isLoading ? "Saving..." : "Save Changes"}
-                </Button>
-                <Button
-                  variant="outline"
-                  className="w-full sm:w-auto"
-                  type="button"
-                  onClick={() => {
-                    // Reset form to current profile values
-                    if (creatorProfile) {
-                      setFormData({
-                        username: creatorProfile.users.username,
-                        displayName: creatorProfile.creator_name,
-                        bio: creatorProfile.bio || "",
-                        category: creatorProfile.category,
-                        basicPrice:
-                          creatorProfile.subscription_price.toString(),
-                        premiumPrice: (
-                          creatorProfile.subscription_price * 2.5
-                        ).toString(),
-                        twitter: creatorProfile.social_links?.twitter || "",
-                        instagram: creatorProfile.social_links?.instagram || "",
-                        profileImage: null,
-                        bannerImage: null,
-                      });
-                    }
-                  }}
-                >
-                  Cancel
-                </Button>
-              </CardFooter>
-            </form>
-          </Card>
-        </TabsContent>
-      </Tabs>
-    </div>
-  );
-}
+                        <Button variant="ghost" size="icon" asChild>
+                          <Link href={`/content/edit/${item.id}`}>
+                            <ChevronRight className="h-4 w-4" />
+                          </Link>
+                        </Button>
+                      </div>

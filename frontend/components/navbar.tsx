@@ -45,12 +45,6 @@ export function Navbar() {
       active: pathname === "/creator-dashboard",
     },
     {
-      href: "/wallet",
-      label: "Wallet",
-      icon: Wallet,
-      active: pathname === "/wallet",
-    },
-    {
       href: "/profile",
       label: "Profile",
       icon: User,
