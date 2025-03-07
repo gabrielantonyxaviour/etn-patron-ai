@@ -20,14 +20,20 @@ const config = IS_PRODUCTION
       chains: [electroneum],
       multiInjectedProviderDiscovery: false,
       transports: {
-        [electroneum.id]: http(),
+        [electroneum.id]: http(
+          "https://rpc.ankr.com/electroneum/" +
+            process.env.NEXT_PUBLIC_ANKR_API_KEY
+        ),
       },
     })
   : createConfig({
       chains: [sepolia],
       multiInjectedProviderDiscovery: false,
       transports: {
-        [sepolia.id]: http(),
+        [sepolia.id]: http(
+          "https://eth-sepolia.g.alchemy.com/v2/" +
+            process.env.NEXT_PUBLIC_ALCHEMY_API_KEY
+        ),
       },
     });
 
@@ -63,7 +69,10 @@ export function Web3Provider({ children }: Web3ProviderProps) {
                         "https://app.dynamic.xyz/assets/networks/eth.svg",
                     },
                     networkId: electroneum.id,
-                    rpcUrls: [electroneum.rpcUrls.default.http[0]],
+                    rpcUrls: [
+                      "https://rpc.ankr.com/electroneum/" +
+                        process.env.NEXT_PUBLIC_ANKR_API_KEY,
+                    ],
                     vanityName: electroneum.name,
                     isTestnet: electroneum.testnet,
                   }
@@ -82,7 +91,10 @@ export function Web3Provider({ children }: Web3ProviderProps) {
                         "https://app.dynamic.xyz/assets/networks/eth.svg",
                     },
                     networkId: sepolia.id,
-                    rpcUrls: [sepolia.rpcUrls.default.http[0]],
+                    rpcUrls: [
+                      "https://eth-sepolia.g.alchemy.com/v2/" +
+                        process.env.NEXT_PUBLIC_ALCHEMY_API_KEY,
+                    ],
                     vanityName: sepolia.name,
                     isTestnet: sepolia.testnet,
                   },

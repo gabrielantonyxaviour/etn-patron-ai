@@ -8,6 +8,10 @@ import { Switch } from "@/components/ui/switch";
 import { Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { publishContent } from "@/lib/tx";
+import { useEnvironmentStore } from "./context";
+import { uploadImageToPinata } from "@/lib/pinata";
+import { encrypt } from "@/lib/lit/encrypt";
 
 interface PublishContentFormProps {
   creatorId?: string;
@@ -15,26 +19,26 @@ interface PublishContentFormProps {
 }
 
 interface FormState {
-  title: string;
-  description: string;
+  caption: string;
   category: string;
   price: string;
+  isPremium: boolean;
+  contentFile: File | null;
 }
 
 export function PublishContentForm({
   creatorId,
   walletAddress,
 }: PublishContentFormProps) {
+  const { publicClient, walletClient } = useEnvironmentStore((store) => store);
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [isPremium, setIsPremium] = useState<boolean>(false);
-  const [contentFile, setContentFile] = useState<File | null>(null);
-  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
 
   const [formData, setFormData] = useState<FormState>({
-    title: "",
-    description: "",
+    caption: "",
     category: "",
     price: "5.00",
+    isPremium: false,
+    contentFile: null,
   });
 
   const handleInputChange = (
@@ -47,18 +51,13 @@ export function PublishContentForm({
     }));
   };
 
-  const handleFileChange = (
-    e: ChangeEvent<HTMLInputElement>,
-    fileType: "content" | "thumbnail"
-  ) => {
+  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      if (fileType === "content") {
-        setContentFile(file);
-      } else if (fileType === "thumbnail") {
-        setThumbnailFile(file);
-      }
-    }
+    if (file)
+      setFormData((prev) => ({
+        ...prev,
+        contentFile: file,
+      }));
   };
 
   const handleSubmit = async (e: FormEvent) => {
@@ -69,7 +68,7 @@ export function PublishContentForm({
       return;
     }
 
-    if (!formData.title || !formData.category || !contentFile) {
+    if (!formData.caption || !formData.category || !formData.contentFile) {
       toast.error("Missing information", {
         description:
           "Please fill in all required fields and upload your content",
@@ -77,81 +76,99 @@ export function PublishContentForm({
       return;
     }
 
+    if (!walletClient || !publicClient) {
+      toast.error("Missing clients", {
+        description: "Public and Wallet Clients are not initialized",
+      });
+      return;
+    }
+    const isProduction = JSON.parse(
+      process.env.NEXT_PUBLIC_IS_PRODUCTION || "false"
+    );
+
     try {
       setIsLoading(true);
 
-      // Upload content file
-      const contentFormData = new FormData();
-      contentFormData.append("file", contentFile);
-      contentFormData.append("wallet", walletAddress);
-      contentFormData.append("contentType", formData.category);
-
-      const contentUploadResponse = await fetch("/api/upload", {
-        method: "POST",
-        body: contentFormData,
+      toast.info("Encrypting Content", {
+        description: "Your post is getting encrypted using Lit Protocol",
       });
 
-      if (!contentUploadResponse.ok) {
-        throw new Error("Failed to upload content file");
+      const imageUrl = await uploadImageToPinata(formData.contentFile);
+
+      let modifiedContent: string = "";
+      let dataHash: string = "";
+
+      if (formData.isPremium) {
+        const { ciphertext, dataToEncryptHash } = await encrypt(imageUrl);
+        dataHash = dataToEncryptHash;
+        modifiedContent = ciphertext;
+      } else {
+        modifiedContent = imageUrl;
       }
 
-      const contentData = await contentUploadResponse.json();
-      const contentUrl = contentData.url;
+      toast.info("Encryption Complete", {
+        description: "Waiting to send a transaction to store the post on-chain",
+      });
 
-      // Upload thumbnail if provided
-      let thumbnailUrl = "";
-      if (thumbnailFile) {
-        const thumbnailFormData = new FormData();
-        thumbnailFormData.append("file", thumbnailFile);
-        thumbnailFormData.append("wallet", walletAddress);
-        thumbnailFormData.append("contentType", "thumbnail");
+      const { hash, error } = await publishContent(
+        publicClient,
+        walletClient,
+        modifiedContent,
+        BigInt(parseFloat(formData.price)),
+        formData.isPremium
+      );
+      if (hash.length > 0) {
+        console.log("Transaction Success");
+        console.log(hash);
+        const createPostData = new FormData();
 
-        const thumbnailUploadResponse = await fetch("/api/upload", {
+        // Add user data to FormData
+        createPostData.append("caption", formData.caption);
+        createPostData.append("post", formData.contentFile);
+        createPostData.append("category", formData.category);
+        createPostData.append("isPremium", formData.isPremium.toString());
+        createPostData.append("isPremium", formData.price);
+        createPostData.append("txHash", hash);
+        createPostData.append("dataHash", dataHash);
+
+        // Create content
+        const response = await fetch("/api/content", {
           method: "POST",
-          body: thumbnailFormData,
+          body: createPostData,
         });
 
-        if (thumbnailUploadResponse.ok) {
-          const thumbnailData = await thumbnailUploadResponse.json();
-          thumbnailUrl = thumbnailData.url;
+        if (!response.ok) {
+          throw new Error("Failed to publish content");
         }
+
+        // Reset form
+        setFormData({
+          contentFile: null,
+          isPremium: false,
+          caption: "",
+          category: "",
+          price: "0.00",
+        });
+        toast.success("Transaction Success", {
+          description: "Your post is posted on the Electroneum Blockchain.",
+          action: {
+            label: "View Tx",
+            onClick: () => {
+              window.open(
+                isProduction
+                  ? "https://blockexplorer.electroneum.com/tx/" + hash
+                  : "https://eth-sepolia.blockscout.com/tx/" + hash,
+                "_blank"
+              );
+            },
+          },
+        });
+      } else {
+        toast.error("Transaction Failed", {
+          description: "Something went wrong, Please Try Again",
+        });
+        return;
       }
-
-      // Create content
-      const response = await fetch("/api/content", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          creator_id: creatorId,
-          wallet_address: walletAddress,
-          title: formData.title,
-          description: formData.description,
-          content_type: formData.category,
-          content_url: contentUrl,
-          thumbnail_url: thumbnailUrl,
-          is_premium: isPremium,
-          access_price: isPremium ? parseFloat(formData.price) : 0,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to publish content");
-      }
-
-      toast.success("Your content has been published");
-
-      // Reset form
-      setFormData({
-        title: "",
-        description: "",
-        category: "",
-        price: "5.00",
-      });
-      setIsPremium(false);
-      setContentFile(null);
-      setThumbnailFile(null);
     } catch (error) {
       console.error("Error publishing content:", error);
       toast.error("Failed to publish content. Please try again.");
@@ -169,24 +186,13 @@ export function PublishContentForm({
       <div className="flex-grow overflow-y-auto px-6">
         <div className="space-y-6 py-4">
           <div className="space-y-2">
-            <Label htmlFor="title">Content Title</Label>
+            <Label htmlFor="title">Content Caption</Label>
             <Input
-              id="title"
+              id="caption"
               placeholder="Give your content a descriptive title"
-              value={formData.title}
+              value={formData.caption}
               onChange={handleInputChange}
               required
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
-              placeholder="Describe your content"
-              className="min-h-32"
-              value={formData.description}
-              onChange={handleInputChange}
             />
           </div>
 
@@ -216,18 +222,18 @@ export function PublishContentForm({
             <div className="border-2 border-dashed rounded-md p-6 flex flex-col items-center justify-center">
               <Upload className="h-8 w-8 text-muted-foreground mb-2" />
               <p className="text-sm text-muted-foreground mb-2">
-                {contentFile
-                  ? contentFile.name
+                {formData.contentFile
+                  ? formData.contentFile.name
                   : "Drag & drop your content file here"}
               </p>
               <p className="text-xs text-muted-foreground mb-4">
-                Supports images, audio, video, PDF, and more (max 500MB)
+                Supports PNG, JPEG, JPG (max 10MB)
               </p>
               <input
                 type="file"
                 id="contentFileInput"
                 className="hidden"
-                onChange={(e) => handleFileChange(e, "content")}
+                onChange={(e) => handleFileChange(e)}
               />
               <Button
                 variant="outline"
@@ -241,37 +247,7 @@ export function PublishContentForm({
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label>Thumbnail Image (Optional)</Label>
-            <div className="border-2 border-dashed rounded-md p-6 flex flex-col items-center justify-center">
-              <Upload className="h-8 w-8 text-muted-foreground mb-2" />
-              <p className="text-sm text-muted-foreground mb-2">
-                {thumbnailFile
-                  ? thumbnailFile.name
-                  : "Upload a thumbnail image"}
-              </p>
-              <p className="text-xs text-muted-foreground mb-4">
-                This will be displayed as the preview image (recommended)
-              </p>
-              <input
-                type="file"
-                id="thumbnailFileInput"
-                accept="image/*"
-                className="hidden"
-                onChange={(e) => handleFileChange(e, "thumbnail")}
-              />
-              <Button
-                variant="outline"
-                type="button"
-                onClick={() =>
-                  document.getElementById("thumbnailFileInput")?.click()
-                }
-              >
-                Select Image
-              </Button>
-            </div>
-          </div>
-          {isPremium && (
+          {formData.isPremium && (
             <div className="space-y-2">
               <Label htmlFor="price">Price (ETN)</Label>
               <Input
@@ -282,7 +258,7 @@ export function PublishContentForm({
                 placeholder="5.00"
                 value={formData.price}
                 onChange={handleInputChange}
-                required={isPremium}
+                required={formData.isPremium}
               />
               <p className="text-sm text-muted-foreground">
                 Set the price fans will pay to access this content.
@@ -292,8 +268,13 @@ export function PublishContentForm({
           <div className="flex items-center space-x-2">
             <Switch
               id="premium"
-              checked={isPremium}
-              onCheckedChange={setIsPremium}
+              checked={formData.isPremium}
+              onCheckedChange={(val) => {
+                setFormData((d) => ({
+                  ...d,
+                  isPremium: val,
+                }));
+              }}
             />
             <Label htmlFor="premium">Premium Content</Label>
           </div>

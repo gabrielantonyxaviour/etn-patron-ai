@@ -1,19 +1,21 @@
+import { PublicClient, WalletClient } from "viem";
 import { StateCreator } from "zustand";
 
 interface GlobalState {
-  count: number;
+  walletClient: WalletClient | null;
+  publicClient: PublicClient | null;
 }
 
 interface GlobalActions {
-  increment: () => void;
-  decrement: () => void;
-  reset: () => void;
+  setWalletClient: (w: WalletClient) => void;
+  setPublicClient: (p: PublicClient) => void;
 }
 
 export type GlobalSlice = GlobalState & GlobalActions;
 
 export const initialGlobalState: GlobalState = {
-  count: 0,
+  walletClient: null,
+  publicClient: null,
 };
 
 export const createGlobalSlice: StateCreator<
@@ -23,7 +25,6 @@ export const createGlobalSlice: StateCreator<
   GlobalSlice
 > = (set) => ({
   ...initialGlobalState,
-  increment: () => set((state) => ({ count: (state.count || 0) + 1 })),
-  decrement: () => set((state) => ({ count: (state.count || 0) - 1 })),
-  reset: () => set(initialGlobalState),
+  setPublicClient: () => set((state) => ({ publicClient: state.publicClient })),
+  setWalletClient: () => set((state) => ({ walletClient: state.walletClient })),
 });
