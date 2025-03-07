@@ -5,7 +5,7 @@ require("dotenv").config();
 const PRIVATE_KEY =
   process.env.PRIVATE_KEY ||
   "0x0000000000000000000000000000000000000000000000000000000000000000";
-
+const ELECTRO_PRIVATE_KEY = process.env.ELECTRO_PRIVATE_KEY || "0x";
 // Zircuit Testnet
 const ELECTRONEUM_RPC_URL =
   "https://rpc.ankr.com/electroneum/" + process.env.ANKR_API_KEY;
@@ -34,7 +34,7 @@ module.exports = {
     },
     electroneum: {
       url: ELECTRONEUM_RPC_URL,
-      accounts: [PRIVATE_KEY],
+      accounts: [ELECTRO_PRIVATE_KEY],
       chainId: 52014,
     },
     sepolia: {
