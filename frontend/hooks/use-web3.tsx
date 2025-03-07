@@ -3,14 +3,13 @@
 import { useState, useEffect } from "react";
 import { createClient, createPublicClient, getAddress, http } from "viem";
 import { formatEther } from "@/lib/utils";
-import { electroneum, electroneumTestnet } from "viem/chains";
+import { electroneum, sepolia } from "viem/chains";
 import { useAccount } from "wagmi";
 
 const IS_PRODUCTION = JSON.parse(
   process.env.NEXT_PUBLIC_IS_PRODUCTION || "false"
 );
-
-const chain = IS_PRODUCTION ? electroneum : electroneumTestnet;
+const chain = IS_PRODUCTION ? electroneum : sepolia;
 // Viem client
 const client = createClient({
   chain,
@@ -24,7 +23,7 @@ export function useWeb3Modal() {
 
   useEffect(() => {
     const client = createPublicClient({
-      chain: IS_PRODUCTION ? electroneum : electroneumTestnet,
+      chain: IS_PRODUCTION ? electroneum : sepolia,
       transport: http(),
     });
     setPublicClient(client);

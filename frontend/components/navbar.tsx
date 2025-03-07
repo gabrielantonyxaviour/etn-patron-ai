@@ -21,6 +21,8 @@ import { useEffect } from "react";
 import { WalletProfileCheck } from "./wallet-profile-check";
 import { createPublicClient, createWalletClient, http } from "viem";
 import { electroneum, sepolia } from "viem/chains";
+import { createClient } from "@dynamic-labs/client";
+import { ViemExtension } from "@dynamic-labs/viem-extension";
 
 export function Navbar() {
   const pathname = usePathname();
@@ -66,45 +68,6 @@ export function Navbar() {
 
   //   checkUserProfile();
   // }, [primaryWallet?.address, fetchUserProfile, setIsProfileModalOpen]);
-
-  useEffect(() => {
-    const isProduction = JSON.parse(
-      process.env.NEXT_PUBLIC_IS_PRODUCTION || "false"
-    );
-    const p = isProduction
-      ? createPublicClient({
-          chain: electroneum,
-          transport: http(
-            "https://rpc.ankr.com/electroneum/" +
-              process.env.NEXT_PUBLIC_ANKR_API_KEY
-          ),
-        })
-      : createPublicClient({
-          chain: sepolia,
-          transport: http(
-            "https://eth-sepolia.g.alchemy.com/v2/" +
-              process.env.NEXT_PUBLIC_ALCHEMY_API_KEY
-          ),
-        });
-    setPublicClient(p);
-    // TODO: Get Wallet client from Dynamic??
-    const w = isProduction
-      ? createWalletClient({
-          chain: electroneum,
-          transport: http(
-            "https://rpc.ankr.com/electroneum/" +
-              process.env.NEXT_PUBLIC_ANKR_API_KEY
-          ),
-        })
-      : createWalletClient({
-          chain: sepolia,
-          transport: http(
-            "https://eth-sepolia.g.alchemy.com/v2/" +
-              process.env.NEXT_PUBLIC_ALCHEMY_API_KEY
-          ),
-        });
-    setWalletClient(w);
-  }, []);
 
   return (
     <header className="sen sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">

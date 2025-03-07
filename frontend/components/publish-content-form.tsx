@@ -3,15 +3,19 @@
 import { useState, ChangeEvent, FormEvent } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { publishContent } from "@/lib/tx";
+import { getRawPublishContent } from "@/lib/tx";
 import { useEnvironmentStore } from "./context";
 import { uploadImageToPinata } from "@/lib/pinata";
 import { encrypt } from "@/lib/lit/encrypt";
+import { useDynamicContext } from "@dynamic-labs/sdk-react-core";
+import { isEthereumWallet } from "@dynamic-labs/ethereum";
+import { deployments } from "@/lib/constants";
+import { electroneum, sepolia } from "viem/chains";
+import { Hex } from "viem";
 
 interface PublishContentFormProps {
   creatorId?: string;
@@ -32,6 +36,7 @@ export function PublishContentForm({
 }: PublishContentFormProps) {
   const { publicClient, walletClient } = useEnvironmentStore((store) => store);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const { primaryWallet } = useDynamicContext();
 
   const [formData, setFormData] = useState<FormState>({
     caption: "",
@@ -76,10 +81,7 @@ export function PublishContentForm({
       return;
     }
 
-    if (!walletClient || !publicClient) {
-      toast.error("Missing clients", {
-        description: "Public and Wallet Clients are not initialized",
-      });
+    if (!primaryWallet || !isEthereumWallet(primaryWallet)) {
       return;
     }
     const isProduction = JSON.parse(
@@ -109,14 +111,16 @@ export function PublishContentForm({
       toast.info("Encryption Complete", {
         description: "Waiting to send a transaction to store the post on-chain",
       });
-
-      const { hash, error } = await publishContent(
-        publicClient,
-        walletClient,
+      const data = getRawPublishContent(
         modifiedContent,
         BigInt(parseFloat(formData.price)),
         formData.isPremium
-      );
+      ) as Hex;
+      const walletClient = await primaryWallet.getWalletClient();
+      const hash = await walletClient.sendTransaction({
+        to: deployments[isProduction ? electroneum.id : sepolia.id],
+        data: data,
+      });
       if (hash.length > 0) {
         console.log("Transaction Success");
         console.log(hash);
@@ -171,7 +175,7 @@ export function PublishContentForm({
         });
       } else {
         toast.error("Transaction Failed", {
-          description: "Something went wrong, Please Try Again. " + error,
+          description: "Something went wrong, Please Try Again. ",
         });
         return;
       }
@@ -238,6 +242,7 @@ export function PublishContentForm({
               <input
                 type="file"
                 id="contentFileInput"
+                accept="image/*"
                 className="hidden"
                 onChange={(e) => handleFileChange(e)}
               />

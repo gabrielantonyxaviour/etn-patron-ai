@@ -7,6 +7,7 @@ import {
   DynamicContextProvider,
   EthereumWalletConnectors,
   DynamicWagmiConnector,
+  EthereumWalletConnectorsWithConfig,
 } from "@/lib/dyanmic";
 import { electroneum, sepolia } from "viem/chains";
 import { useTheme } from "next-themes";
@@ -50,7 +51,18 @@ export function Web3Provider({ children }: Web3ProviderProps) {
         theme={theme == "light" ? "light" : "dark"}
         settings={{
           environmentId: process.env.NEXT_PUBLIC_DYNAMIC_ENVIRONMENT_ID || "",
-          walletConnectors: [EthereumWalletConnectors],
+          walletConnectors: [
+            EthereumWalletConnectorsWithConfig({
+              publicClientHttpTransportConfig: {
+                fetchOptions: {
+                  headers: {
+                    "X-Requested-With": "XMLHttpRequest",
+                  },
+                },
+                retryCount: 0,
+              },
+            }),
+          ],
           overrides: {
             evmNetworks: [
               IS_PRODUCTION

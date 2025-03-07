@@ -1,238 +1,96 @@
-import { Hex, PublicClient, WalletClient } from "viem";
+import { Hex, encodeFunctionData } from "viem";
 import { etnPatronAbi } from "./abi";
 import { deployments } from "./constants";
 import { sepolia } from "viem/chains";
 
-// Read Functions
+// Convert functions to return raw transaction data
 
-export async function canDecryptContent(
-  publicClient: PublicClient,
-  address: Hex,
-  contentId: bigint
-): Promise<{ canDecrypt: boolean; error: string }> {
-  try {
-    const data = await publicClient.readContract({
-      address: deployments[publicClient.chain?.id || sepolia.id],
-      abi: etnPatronAbi,
-      functionName: "canDecryptContent",
-      args: [address, contentId],
-    });
-
-    return { canDecrypt: data as boolean, error: "" };
-  } catch (e) {
-    return {
-      canDecrypt: false,
-      error: JSON.stringify(e),
-    };
-  }
+export function getRawRegisterCreator(): string {
+  return encodeFunctionData({
+    abi: etnPatronAbi,
+    functionName: "registerCreator",
+    args: [],
+  });
 }
 
-// Write Functions
-
-export async function registerCreator(
-  publicClient: PublicClient,
-  walletClient: WalletClient
-): Promise<{ hash: string; error: string }> {
-  try {
-    const { request } = await publicClient.simulateContract({
-      address: deployments[walletClient.chain?.id || sepolia.id],
-      abi: etnPatronAbi,
-      functionName: "registerCreator",
-      args: [],
-      account: walletClient.account,
-    });
-
-    const hash = await walletClient.sendTransaction({
-      ...request,
-      to: request.address,
-    });
-    await publicClient.waitForTransactionReceipt({ hash });
-
-    return { hash, error: "" };
-  } catch (e) {
-    return {
-      hash: "",
-      error: JSON.stringify(e),
-    };
-  }
+export function getRawUpdatePlatformFee(newFeePercentage: bigint): string {
+  return encodeFunctionData({
+    abi: etnPatronAbi,
+    functionName: "updatePlatformFee",
+    args: [newFeePercentage],
+  });
 }
 
-export async function updatePlatformFee(
-  publicClient: PublicClient,
-  walletClient: WalletClient,
-  newFeePercentage: bigint
-): Promise<{ hash: string; error: string }> {
-  try {
-    const { request } = await publicClient.simulateContract({
-      address: deployments[walletClient.chain?.id || sepolia.id],
-      abi: etnPatronAbi,
-      functionName: "updatePlatformFee",
-      args: [newFeePercentage],
-      account: walletClient.account,
-    });
-
-    const hash = await walletClient.sendTransaction({
-      ...request,
-      to: request.address,
-    });
-    await publicClient.waitForTransactionReceipt({ hash });
-
-    return { hash, error: "" };
-  } catch (e) {
-    return {
-      hash: "",
-      error: JSON.stringify(e),
-    };
-  }
+export function getRawWithdraw(): string {
+  return encodeFunctionData({
+    abi: etnPatronAbi,
+    functionName: "withdraw",
+  });
 }
 
-export async function withdraw(
-  publicClient: PublicClient,
-  walletClient: WalletClient
-): Promise<{ hash: string; error: string }> {
-  try {
-    const { request } = await publicClient.simulateContract({
-      address: deployments[walletClient.chain?.id || sepolia.id],
-      abi: etnPatronAbi,
-      functionName: "withdraw",
-      account: walletClient.account,
-    });
-
-    const hash = await walletClient.sendTransaction({
-      ...request,
-      to: request.address,
-    });
-    await publicClient.waitForTransactionReceipt({ hash });
-
-    return { hash, error: "" };
-  } catch (e) {
-    return {
-      hash: "",
-      error: JSON.stringify(e),
-    };
-  }
+export function getRawSubscribe(creatorAddress: Hex): string {
+  return encodeFunctionData({
+    abi: etnPatronAbi,
+    functionName: "subscribe",
+    args: [creatorAddress],
+  });
 }
 
-export async function subscribe(
-  publicClient: PublicClient,
-  walletClient: WalletClient,
-  creatorAddress: Hex,
-  amount: bigint
-): Promise<{ hash: string; error: string }> {
-  try {
-    const { request } = await publicClient.simulateContract({
-      address: deployments[walletClient.chain?.id || sepolia.id],
-      abi: etnPatronAbi,
-      functionName: "subscribe",
-      args: [creatorAddress],
-      account: walletClient.account,
-      value: amount,
-    });
-
-    const hash = await walletClient.sendTransaction({
-      ...request,
-      to: request.address,
-    });
-    await publicClient.waitForTransactionReceipt({ hash });
-
-    return { hash, error: "" };
-  } catch (e) {
-    return {
-      hash: "",
-      error: JSON.stringify(e),
-    };
-  }
+export function getRawTipCreator(contentId: bigint): string {
+  return encodeFunctionData({
+    abi: etnPatronAbi,
+    functionName: "tipCreator",
+    args: [contentId],
+  });
 }
 
-export async function tipCreator(
-  publicClient: PublicClient,
-  walletClient: WalletClient,
-  contentId: bigint,
-  amount: bigint
-): Promise<{ hash: string; error: string }> {
-  try {
-    const { request } = await publicClient.simulateContract({
-      address: deployments[walletClient.chain?.id || sepolia.id],
-      abi: etnPatronAbi,
-      functionName: "tipCreator",
-      args: [contentId],
-      account: walletClient.account,
-      value: amount,
-    });
-
-    const hash = await walletClient.sendTransaction({
-      ...request,
-      to: request.address,
-    });
-    await publicClient.waitForTransactionReceipt({ hash });
-
-    return { hash, error: "" };
-  } catch (e) {
-    return {
-      hash: "",
-      error: JSON.stringify(e),
-    };
-  }
+export function getRawPurchaseContent(contentId: bigint): string {
+  return encodeFunctionData({
+    abi: etnPatronAbi,
+    functionName: "purchaseContent",
+    args: [contentId],
+  });
 }
 
-export async function purchaseContent(
-  publicClient: PublicClient,
-  walletClient: WalletClient,
-  contentId: bigint,
-  amount: bigint
-): Promise<{ hash: string; error: string }> {
-  try {
-    const { request } = await publicClient.simulateContract({
-      address: deployments[walletClient.chain?.id || sepolia.id],
-      abi: etnPatronAbi,
-      functionName: "purchaseContent",
-      args: [contentId],
-      account: walletClient.account,
-      value: amount,
-    });
-
-    const hash = await walletClient.sendTransaction({
-      ...request,
-      to: request.address,
-    });
-    await publicClient.waitForTransactionReceipt({ hash });
-
-    return { hash, error: "" };
-  } catch (e) {
-    return {
-      hash: "",
-      error: JSON.stringify(e),
-    };
-  }
-}
-
-export async function publishContent(
-  publicClient: PublicClient,
-  walletClient: WalletClient,
+export function getRawPublishContent(
   content: string,
   price: bigint,
   isPremium: boolean
-): Promise<{ hash: string; error: string }> {
-  try {
-    const { request } = await publicClient.simulateContract({
-      address: deployments[walletClient.chain?.id || sepolia.id],
-      abi: etnPatronAbi,
-      functionName: "publishContent",
-      args: [content, price, isPremium],
-      account: walletClient.account,
-    });
+): string {
+  return encodeFunctionData({
+    abi: etnPatronAbi,
+    functionName: "publishContent",
+    args: [content, price, isPremium],
+  });
+}
 
-    const hash = await walletClient.sendTransaction({
-      ...request,
-      to: request.address,
-    });
-    await publicClient.waitForTransactionReceipt({ hash });
+// For completeness, also include a helper function to create a full transaction object
+export function createRawTransaction(
+  functionData: string,
+  chainId: number = sepolia.id,
+  value: bigint = BigInt(0)
+): {
+  to: Hex;
+  data: string;
+  value: string;
+} {
+  const contractAddress = deployments[chainId] || deployments[sepolia.id];
 
-    return { hash, error: "" };
-  } catch (e) {
-    return {
-      hash: "",
-      error: JSON.stringify(e),
-    };
-  }
+  return {
+    to: contractAddress,
+    data: functionData,
+    value: value.toString(),
+  };
+}
+
+// Generic function for any contract call
+export function getRawTransactionData(
+  functionName: string,
+  args: any[]
+): string {
+  return encodeFunctionData({
+    abi: etnPatronAbi,
+    functionName,
+    args,
+  });
 }

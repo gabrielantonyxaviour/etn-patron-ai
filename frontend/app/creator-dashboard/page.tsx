@@ -48,7 +48,11 @@ import { DynamicWidget, useDynamicContext } from "@dynamic-labs/sdk-react-core";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import { useEnvironmentStore } from "@/components/context";
-import { registerCreator } from "@/lib/tx";
+import { getRawRegisterCreator } from "@/lib/tx";
+import { Hex } from "viem";
+import { isEthereumWallet } from "@dynamic-labs/ethereum";
+import { deployments } from "@/lib/constants";
+import { electroneum, sepolia } from "viem/chains";
 
 // Types
 interface CreatorProfile {
@@ -437,23 +441,22 @@ export default function CreatorDashboardPage() {
   const handleRegisterCreator = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!primaryWallet?.address) {
-      toast.error("Please connect your wallet first");
-      return;
-    }
-
-    if (!walletClient || !publicClient) {
-      toast.error("Missing clients", {
-        description: "Public and Wallet Clients are not initialized",
-      });
+    if (!primaryWallet || !isEthereumWallet(primaryWallet)) {
+      console.log("Primary wallet not found");
       return;
     }
 
     try {
       setIsCreateProfileLoading(true);
-
-      const { hash, error } = await registerCreator(publicClient, walletClient);
-
+      const isProduction = JSON.parse(
+        process.env.NEXT_PUBLIC_IS_PRODUCTION || "false"
+      );
+      const data = getRawRegisterCreator() as Hex;
+      const walletClient = await primaryWallet.getWalletClient();
+      const hash = await walletClient.sendTransaction({
+        to: deployments[isProduction ? electroneum.id : sepolia.id],
+        data: data,
+      });
       if (hash.length > 0) {
         const createProfileFormData = new FormData();
 
@@ -492,7 +495,7 @@ export default function CreatorDashboardPage() {
         }
       } else {
         toast.error("Transaction Failed", {
-          description: "Something went wrong, Please Try Again. " + error,
+          description: "Something went wrong, Please Try Again. ",
         });
         return;
       }
