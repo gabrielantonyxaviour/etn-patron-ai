@@ -124,7 +124,7 @@ export function PublishContentForm({
 
         // Add user data to FormData
         createPostData.append("caption", formData.caption);
-        createPostData.append("post", formData.contentFile);
+        createPostData.append("post_url", imageUrl);
         createPostData.append("category", formData.category);
         createPostData.append("isPremium", formData.isPremium.toString());
         createPostData.append("isPremium", formData.price);
@@ -134,7 +134,13 @@ export function PublishContentForm({
         // Create content
         const response = await fetch("/api/content", {
           method: "POST",
-          body: createPostData,
+          body: JSON.stringify({
+            caption: formData.caption,
+            post_url: imageUrl,
+            category: formData.category,
+            isPremium: formData.isPremium,
+            price: formData.price,
+          }),
         });
 
         if (!response.ok) {
