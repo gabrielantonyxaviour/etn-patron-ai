@@ -675,133 +675,6 @@ export default function CreatorDashboardPage() {
                       disabled
                     />
                   </div>
-
-                  <div className="space-y-2">
-                    <Label>Profile Image</Label>
-                    <div className="flex items-center gap-4">
-                      <Avatar className="w-20 h-20">
-                        <AvatarImage
-                          src={userProfile?.avatar_url || "https://i.pravatar.cc/298"}
-                          alt="Profile"
-                        />
-                        <AvatarFallback>
-                          {userProfile?.username
-                            ?.substring(0, 2)
-                            .toUpperCase() || "U"}
-                        </AvatarFallback>
-                      </Avatar>
-                      <input
-                        type="file"
-                        id="profileImageInput"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={(e) => handleSettingsFileChange(e, "profileImage")}
-                      />
-                      <Button
-                        variant="outline"
-                        className="gap-2"
-                        type="button"
-                        onClick={() =>
-                          document.getElementById("profileImageInput")?.click()
-                        }
-                      >
-                        <Upload className="h-4 w-4" />
-                        Upload New Image
-                      </Button>
-                      {settingsForm.profileImage && (
-                        <p className="text-sm">
-                          Selected: {settingsForm.profileImage.name}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Banner Image</Label>
-                    <div className="h-32 bg-muted rounded-md relative overflow-hidden">
-                      {creatorProfile?.banner_url ? (
-                        <img
-                          src={creatorProfile.banner_url}
-                          alt="Banner"
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="flex items-center justify-center h-full">
-                          <p className="text-muted-foreground text-sm">
-                            No banner image
-                          </p>
-                        </div>
-                      )}
-                      <input
-                        type="file"
-                        id="bannerImageInput"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={(e) => handleSettingsFileChange(e, "bannerImage")}
-                      />
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="absolute bottom-2 right-2 gap-2"
-                        type="button"
-                        onClick={() =>
-                          document.getElementById("bannerImageInput")?.click()
-                        }
-                      >
-                        <Upload className="h-4 w-4" />
-                        Change Banner
-                      </Button>
-                      {settingsForm.bannerImage && (
-                        <div className="absolute bottom-2 left-2 bg-background/80 px-2 py-1 rounded text-xs">
-                          Selected: {settingsForm.bannerImage.name}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-              <CardFooter className="flex flex-col sm:flex-row gap-2">
-                <Button
-                  className="w-full sm:w-auto"
-                  type="submit"
-                  disabled={isLoading}
-                >
-                  {isLoading ? "Saving..." : "Save Changes"}
-                </Button>
-                <Button
-                  variant="outline"
-                  className="w-full sm:w-auto"
-                  type="button"
-                  onClick={() => {
-                    // Reset form to current profile values
-                    if (creatorProfile && userProfile) {
-                      setSettingsForm({
-                        displayName: userProfile.full_name || "",
-                        username: userProfile.username || "",
-                        bio: userProfile.bio || "",
-                        category: creatorProfile.category,
-                        basicPrice: creatorProfile.subscription_price.toString(),
-                        premiumPrice: (
-                          creatorProfile.subscription_price * 2.5
-                        ).toString(),
-                        twitter: creatorProfile.social_links?.twitter || "",
-                        instagram: creatorProfile.social_links?.instagram || "",
-                        profileImage: null,
-                        bannerImage: null,
-                      });
-                    }
-                  }}
-                >
-                  Cancel
-                </Button>
-              </CardFooter>
-            </form>
-          </Card>
-        </TabsContent>
-      </Tabs>
-    </div>
-  );
-}
                   <div className="space-y-2">
                     <Label htmlFor="category">Primary Category</Label>
                     <select
@@ -1077,29 +950,35 @@ export default function CreatorDashboardPage() {
                         </div>
                         <div>
                           <div className="flex items-center gap-2">
-                            <p className="text-sm text-muted-foreground">
-                              Subscribed since{" "}
-                              {new Date(
-                                subscriber.start_date
-                              ).toLocaleDateString()}
-                            </p>
+                            <h3 className="font-medium">{item.title}</h3>
                             <Badge variant="secondary">
-                              {subscriber.subscription_tier === "premium"
-                                ? "Premium Tier"
-                                : "Basic Tier"}
+                              {item.is_premium ? "Premium" : "Free"}
                             </Badge>
                           </div>
                         </div>
                       </div>
-                      <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-6">
                         <div className="text-right">
-                          <p className="text-sm font-medium">Subscription</p>
+                          <p className="text-sm font-medium">Views</p>
                           <p className="text-muted-foreground">
-                            {subscriber.price_paid} ETN/month
+                            {item.views_count}
                           </p>
                         </div>
-                        <Button variant="ghost" size="icon">
-                          <ChevronRight className="h-4 w-4" />
+                        <div className="text-right">
+                          <p className="text-sm font-medium">Earnings</p>
+                          <p className="text-muted-foreground">
+                            {(item.is_premium
+                              ? item.access_price *
+                                Math.floor(item.views_count / 3)
+                              : 0
+                            ).toFixed(2)}{" "}
+                            ETN
+                          </p>
+                        </div>
+                        <Button variant="ghost" size="icon" asChild>
+                          <Link href={`/content/edit/${item.id}`}>
+                            <ChevronRight className="h-4 w-4" />
+                          </Link>
                         </Button>
                       </div>
                     </div>
@@ -1107,10 +986,10 @@ export default function CreatorDashboardPage() {
                 </div>
               )}
             </CardContent>
-            {subscribers.length > 0 && (
+            {content.length > 0 && (
               <CardFooter>
                 <Button variant="outline" className="w-full">
-                  View All Subscribers
+                  View All Content
                 </Button>
               </CardFooter>
             )}
@@ -1238,45 +1117,576 @@ export default function CreatorDashboardPage() {
                         />
                       </div>
                     </div>
-                  </div>">
-                            <h3 className="font-medium">{item.title}</h3>
+                  </div>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="text-sm text-muted-foreground">
+                      Published {formatDistanceToNow(new Date(item.created_at))}{" "}
+                      ago
+                    </span>
+                    <Badge variant="outline" className="text-xs">
+                      {item.content_type}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center gap-6">
+                    <div className="text-right">
+                      <p className="text-sm font-medium">Views</p>
+                      <p className="text-muted-foreground">
+                        {item.views_count}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-medium">Earnings</p>
+                      <p className="text-muted-foreground">
+                        {(item.is_premium
+                          ? item.access_price * Math.floor(item.views_count / 3)
+                          : 0
+                        ).toFixed(2)}{" "}
+                        ETN
+                      </p>
+                    </div>
+                    <Button variant="ghost" size="icon" asChild>
+                      <Link href={`/content/edit/${item.id}`}>
+                        <ChevronRight className="h-4 w-4" />
+                      </Link>
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </form>
+            {content.length > 0 && (
+              <CardFooter>
+                <Button variant="outline" className="w-full">
+                  View All Content
+                </Button>
+              </CardFooter>
+            )}
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="earnings">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle>Earnings Overview</CardTitle>
+                <CardDescription>
+                  Track your earnings from content purchases, subscriptions, and
+                  tips.
+                </CardDescription>
+              </div>
+              <Button variant="outline" size="sm" className="gap-2">
+                <Download className="h-4 w-4" />
+                Export Data
+              </Button>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+                <Card className="bg-muted/50">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base">This Month</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">
+                      {earningsData.thisMonth.toFixed(2)} ETN
+                    </div>
+                    <p className="text-xs text-muted-foreground flex items-center mt-1">
+                      {earningsData.percentChange > 0 ? (
+                        <TrendingUp className="h-3 w-3 text-green-500 mr-1" />
+                      ) : (
+                        <TrendingUp className="h-3 w-3 text-red-500 mr-1 transform rotate-180" />
+                      )}
+                      <span
+                        className={
+                          earningsData.percentChange > 0
+                            ? "text-green-500"
+                            : "text-red-500"
+                        }
+                      >
+                        {earningsData.percentChange > 0 ? "+" : ""}
+                        {earningsData.percentChange.toFixed(0)}% from last month
+                      </span>
+                    </p>
+                  </CardContent>
+                </Card>
+
+                <Card className="bg-muted/50">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base">Last Month</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">
+                      {earningsData.lastMonth.toFixed(2)} ETN
+                    </div>
+                    <p className="text-xs text-muted-foreground flex items-center mt-1">
+                      <Calendar className="h-3 w-3 mr-1" />
+                      <span>
+                        {new Date().getMonth() === 0
+                          ? "December"
+                          : new Date(
+                              0,
+                              new Date().getMonth() - 1
+                            ).toLocaleString("default", { month: "long" })}{" "}
+                        {new Date().getFullYear()}
+                      </span>
+                    </p>
+                  </CardContent>
+                </Card>
+
+                <Card className="bg-muted/50">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base">All Time</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">
+                      {dashboardMetrics.totalEarnings.toFixed(2)} ETN
+                    </div>
+                    <p className="text-xs text-muted-foreground flex items-center mt-1">
+                      <Calendar className="h-3 w-3 mr-1" />
+                      <span>
+                        Since{" "}
+                        {new Date(
+                          creatorProfile?.created_at || new Date()
+                        ).toLocaleDateString()}
+                      </span>
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <div className="h-80 w-full bg-muted/50 rounded-md flex items-center justify-center mb-6">
+                {/* In a real app, this would be a chart component */}
+                <p className="text-muted-foreground">
+                  Earnings chart will appear here
+                </p>
+              </div>
+
+              <h3 className="text-lg font-medium mb-4">Earnings by Source</h3>
+              <div className="space-y-4">
+                <div className="flex justify-between items-center p-4 border rounded-lg">
+                  <div>
+                    <h4 className="font-medium">Content Purchases</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Revenue from premium content
+                    </p>
+                  </div>
+                  <p className="font-medium">
+                    {earningsBySource.contentPurchases.toFixed(2)} ETN
+                  </p>
+                </div>
+
+                <div className="flex justify-between items-center p-4 border rounded-lg">
+                  <div>
+                    <h4 className="font-medium">Subscriptions</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Monthly subscriber revenue
+                    </p>
+                  </div>
+                  <p className="font-medium">
+                    {earningsBySource.subscriptions.toFixed(2)} ETN
+                  </p>
+                </div>
+
+                <div className="flex justify-between items-center p-4 border rounded-lg">
+                  <div>
+                    <h4 className="font-medium">Tips</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Voluntary contributions from fans
+                    </p>
+                  </div>
+                  <p className="font-medium">
+                    {earningsBySource.tips.toFixed(2)} ETN
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+            <CardFooter>
+              <Button variant="outline" className="w-full gap-2">
+                <Download className="h-4 w-4" />
+                Download Earnings Report
+              </Button>
+            </CardFooter>
+          </Card>
+        </TabsContent>
+        <TabsContent value="subscribers">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle>Subscriber Management</CardTitle>
+                <CardDescription>
+                  View and manage your subscribers.
+                </CardDescription>
+              </div>
+              <div className="flex items-center gap-2">
+                <Label htmlFor="filter-subscribers" className="sr-only">
+                  Filter
+                </Label>
+                <select
+                  id="filter-subscribers"
+                  className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                >
+                  <option value="all">All Subscribers</option>
+                  <option value="recent">Recent Subscribers</option>
+                  <option value="basic">Basic Tier</option>
+                  <option value="premium">Premium Tier</option>
+                </select>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {subscribers.length === 0 ? (
+                <div className="text-center py-12">
+                  <Users className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-medium mb-2">
+                    No subscribers yet
+                  </h3>
+                  <p className="text-muted-foreground mb-4">
+                    As people subscribe to your content, they&apos;ll appear
+                    here
+                  </p>
+                  <Button variant="outline" asChild>
+                    <Link href="/explore">Find Creators to Follow</Link>
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {subscribers.map((subscriber) => (
+                    <div
+                      key={subscriber.id}
+                      className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
+                    >
+                      <div className="flex items-center gap-4">
+                        <Avatar className="h-10 w-10">
+                          <AvatarImage
+                            src={
+                              subscriber.users.avatar_url ||
+                              "/subscribers/placeholder.jpg"
+                            }
+                          />
+                          <AvatarFallback>
+                            {subscriber.users.username
+                              .substring(0, 2)
+                              .toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <h3 className="font-medium">
+                            {subscriber.users.full_name ||
+                              subscriber.users.username}
+                          </h3>
+                          <div className="flex items-center gap-2">
+                            <p className="text-sm text-muted-foreground">
+                              Subscribed since{" "}
+                              {new Date(
+                                subscriber.start_date
+                              ).toLocaleDateString()}
+                            </p>
                             <Badge variant="secondary">
-                              {item.is_premium ? "Premium" : "Free"}
-                            </Badge>
-                          </div>
-                          <div className="flex items-center gap-2 mt-1">
-                            <span className="text-sm text-muted-foreground">
-                              Published{" "}
-                              {formatDistanceToNow(new Date(item.created_at))}{" "}
-                              ago
-                            </span>
-                            <Badge variant="outline" className="text-xs">
-                              {item.content_type}
+                              {subscriber.subscription_tier === "premium"
+                                ? "Premium Tier"
+                                : "Basic Tier"}
                             </Badge>
                           </div>
                         </div>
                       </div>
-                      <div className="flex items-center gap-6">
+                      <div className="flex items-center gap-4">
                         <div className="text-right">
-                          <p className="text-sm font-medium">Views</p>
+                          <p className="text-sm font-medium">Subscription</p>
                           <p className="text-muted-foreground">
-                            {item.views_count}
+                            {subscriber.price_paid} ETN/month
                           </p>
                         </div>
-                        <div className="text-right">
-                          <p className="text-sm font-medium">Earnings</p>
-                          <p className="text-muted-foreground">
-                            {(item.is_premium
-                              ? item.access_price *
-                                Math.floor(item.views_count / 3)
-                              : 0
-                            ).toFixed(2)}{" "}
-                            ETN
-                          </p>
-                        </div>
-                        <Button variant="ghost" size="icon" asChild>
-                          <Link href={`/content/edit/${item.id}`}>
-                            <ChevronRight className="h-4 w-4" />
-                          </Link>
+                        <Button variant="ghost" size="icon">
+                          <ChevronRight className="h-4 w-4" />
                         </Button>
                       </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+            {subscribers.length > 0 && (
+              <CardFooter>
+                <Button variant="outline" className="w-full">
+                  View All Subscribers
+                </Button>
+              </CardFooter>
+            )}
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="settings">
+          <Card>
+            <CardHeader>
+              <CardTitle>Creator Profile Settings</CardTitle>
+              <CardDescription>
+                Manage your creator profile and subscription options.
+              </CardDescription>
+            </CardHeader>
+            <form onSubmit={handleUpdateSettings}>
+              <CardContent>
+                <div className="space-y-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="walletAddress">Wallet Address</Label>
+                    <div className="flex">
+                      <Input
+                        id="walletAddress"
+                        value={primaryWallet?.address || ""}
+                        disabled
+                      />
+                      <Button
+                        variant="ghost"
+                        className="ml-2"
+                        type="button"
+                        onClick={() => {
+                          navigator.clipboard.writeText(
+                            primaryWallet?.address || ""
+                          );
+                          toast.info("Copied to clipboard");
+                        }}
+                      >
+                        Copy
+                      </Button>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      This is the wallet address where you&apos;ll receive
+                      payments.
+                    </p>
+                  </div>
+
+                  <Separator />
+
+                  <div className="space-y-2">
+                    <Label htmlFor="displayName">Display Name</Label>
+                    <Input
+                      id="displayName"
+                      value={settingsForm.displayName}
+                      onChange={handleSettingsInputChange}
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="username">Username</Label>
+                    <Input
+                      id="username"
+                      value={settingsForm.username}
+                      onChange={handleSettingsInputChange}
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="bio">Bio</Label>
+                    <Textarea
+                      id="bio"
+                      value={settingsForm.bio}
+                      onChange={handleSettingsInputChange}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="category">Primary Category</Label>
+                    <select
+                      id="category"
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                      value={settingsForm.category}
+                      onChange={handleSettingsInputChange}
+                      required
+                    >
+                      <option value="">Select a category</option>
+                      <option value="Digital Art">Digital Art</option>
+                      <option value="Music">Music</option>
+                      <option value="Writing">Writing</option>
+                      <option value="Video">Video</option>
+                      <option value="Photography">Photography</option>
+                      <option value="Programming">Programming</option>
+                      <option value="Design">Design</option>
+                      <option value="Crafts">Crafts</option>
+                    </select>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="basicPrice">Basic Tier Price (ETN)</Label>
+                      <Input
+                        id="basicPrice"
+                        type="number"
+                        value={settingsForm.basicPrice}
+                        onChange={handleSettingsInputChange}
+                        required
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="premiumPrice">
+                        Premium Tier Price (ETN)
+                      </Label>
+                      <Input
+                        id="premiumPrice"
+                        type="number"
+                        value={settingsForm.premiumPrice}
+                        onChange={handleSettingsInputChange}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Social Media Links</Label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="twitter" className="text-xs">
+                          Twitter
+                        </Label>
+                        <Input
+                          id="twitter"
+                          placeholder="@username"
+                          value={settingsForm.twitter}
+                          onChange={handleSettingsInputChange}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="instagram" className="text-xs">
+                          Instagram
+                        </Label>
+                        <Input
+                          id="instagram"
+                          placeholder="@username"
+                          value={settingsForm.instagram}
+                          onChange={handleSettingsInputChange}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Profile Image</Label>
+                    <div className="flex items-center gap-4">
+                      <Avatar className="w-20 h-20">
+                        <AvatarImage
+                          src={
+                            userProfile?.avatar_url ||
+                            "https://i.pravatar.cc/298"
+                          }
+                          alt="Profile"
+                        />
+                        <AvatarFallback>
+                          {userProfile?.username
+                            ?.substring(0, 2)
+                            .toUpperCase() || "U"}
+                        </AvatarFallback>
+                      </Avatar>
+                      <input
+                        type="file"
+                        id="profileImageInput"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) =>
+                          handleSettingsFileChange(e, "profileImage")
+                        }
+                      />
+                      <Button
+                        variant="outline"
+                        className="gap-2"
+                        type="button"
+                        onClick={() =>
+                          document.getElementById("profileImageInput")?.click()
+                        }
+                      >
+                        <Upload className="h-4 w-4" />
+                        Upload New Image
+                      </Button>
+                      {settingsForm.profileImage && (
+                        <p className="text-sm">
+                          Selected: {settingsForm.profileImage.name}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Banner Image</Label>
+                    <div className="h-32 bg-muted rounded-md relative overflow-hidden">
+                      {creatorProfile?.banner_url ? (
+                        <img
+                          src={creatorProfile.banner_url}
+                          alt="Banner"
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="flex items-center justify-center h-full">
+                          <p className="text-muted-foreground text-sm">
+                            No banner image
+                          </p>
+                        </div>
+                      )}
+                      <input
+                        type="file"
+                        id="bannerImageInput"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) =>
+                          handleSettingsFileChange(e, "bannerImage")
+                        }
+                      />
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="absolute bottom-2 right-2 gap-2"
+                        type="button"
+                        onClick={() =>
+                          document.getElementById("bannerImageInput")?.click()
+                        }
+                      >
+                        <Upload className="h-4 w-4" />
+                        Change Banner
+                      </Button>
+                      {settingsForm.bannerImage && (
+                        <div className="absolute bottom-2 left-2 bg-background/80 px-2 py-1 rounded text-xs">
+                          Selected: {settingsForm.bannerImage.name}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+              <CardFooter className="flex flex-col sm:flex-row gap-2">
+                <Button
+                  className="w-full sm:w-auto"
+                  type="submit"
+                  disabled={isLoading}
+                >
+                  {isLoading ? "Saving..." : "Save Changes"}
+                </Button>
+                <Button
+                  variant="outline"
+                  className="w-full sm:w-auto"
+                  type="button"
+                  onClick={() => {
+                    // Reset form to current profile values
+                    if (creatorProfile && userProfile) {
+                      setSettingsForm({
+                        displayName: userProfile.full_name || "",
+                        username: userProfile.username || "",
+                        bio: userProfile.bio || "",
+                        category: creatorProfile.category,
+                        basicPrice:
+                          creatorProfile.subscription_price.toString(),
+                        premiumPrice: (
+                          creatorProfile.subscription_price * 2.5
+                        ).toString(),
+                        twitter: creatorProfile.social_links?.twitter || "",
+                        instagram: creatorProfile.social_links?.instagram || "",
+                        profileImage: null,
+                        bannerImage: null,
+                      });
+                    }
+                  }}
+                >
+                  Cancel
+                </Button>
+              </CardFooter>
+            </form>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}
