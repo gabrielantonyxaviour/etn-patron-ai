@@ -733,9 +733,9 @@ export default function CreatorDashboardPage() {
                 Publish Content
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[600px]">
+            <DialogContent className="h-[90vh] sm:max-w-[600px] sen">
               <DialogHeader>
-                <DialogTitle>Publish New Content</DialogTitle>
+                <DialogTitle className="sen">Publish New Content</DialogTitle>
                 <DialogDescription>
                   Create and publish new content for your subscribers and fans.
                 </DialogDescription>
@@ -745,12 +745,6 @@ export default function CreatorDashboardPage() {
                 creatorId={creatorProfile?.id}
                 walletAddress={primaryWallet?.address}
               />
-
-              <DialogFooter className="mt-4">
-                <Button type="submit" form="publish-content-form">
-                  Publish
-                </Button>
-              </DialogFooter>
             </DialogContent>
           </Dialog>
 
@@ -833,7 +827,7 @@ export default function CreatorDashboardPage() {
                         Publish Your First Content
                       </Button>
                     </DialogTrigger>
-                    <DialogContent className="sm:max-w-[600px]">
+                    <DialogContent className="h-[90vh] sm:max-w-[600px]">
                       <DialogHeader>
                         <DialogTitle>Publish New Content</DialogTitle>
                         <DialogDescription>
@@ -846,12 +840,6 @@ export default function CreatorDashboardPage() {
                         creatorId={creatorProfile?.id}
                         walletAddress={primaryWallet?.address}
                       />
-
-                      <DialogFooter className="mt-4">
-                        <Button type="submit" form="publish-content-form">
-                          Publish
-                        </Button>
-                      </DialogFooter>
                     </DialogContent>
                   </Dialog>
                 </div>

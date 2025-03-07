@@ -163,140 +163,147 @@ export function PublishContentForm({
   return (
     <form
       id="publish-content-form"
-      className="space-y-6"
+      className="flex flex-col flex-grow overflow-hidden"
       onSubmit={handleSubmit}
     >
-      <div className="space-y-2">
-        <Label htmlFor="title">Content Title</Label>
-        <Input
-          id="title"
-          placeholder="Give your content a descriptive title"
-          value={formData.title}
-          onChange={handleInputChange}
-          required
-        />
-      </div>
+      <div className="flex-grow overflow-y-auto px-6">
+        <div className="space-y-6 py-4">
+          <div className="space-y-2">
+            <Label htmlFor="title">Content Title</Label>
+            <Input
+              id="title"
+              placeholder="Give your content a descriptive title"
+              value={formData.title}
+              onChange={handleInputChange}
+              required
+            />
+          </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="description">Description</Label>
-        <Textarea
-          id="description"
-          placeholder="Describe your content"
-          className="min-h-32"
-          value={formData.description}
-          onChange={handleInputChange}
-        />
-      </div>
+          <div className="space-y-2">
+            <Label htmlFor="description">Description</Label>
+            <Textarea
+              id="description"
+              placeholder="Describe your content"
+              className="min-h-32"
+              value={formData.description}
+              onChange={handleInputChange}
+            />
+          </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="category">Category</Label>
-        <select
-          id="category"
-          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-          value={formData.category}
-          onChange={handleInputChange}
-          required
-        >
-          <option value="">Select a category</option>
-          <option value="Digital Art">Digital Art</option>
-          <option value="Music">Music</option>
-          <option value="Writing">Writing</option>
-          <option value="Video">Video</option>
-          <option value="Photography">Photography</option>
-          <option value="Programming">Programming</option>
-          <option value="Design">Design</option>
-          <option value="Crafts">Crafts</option>
-        </select>
-      </div>
+          <div className="space-y-2">
+            <Label htmlFor="category">Category</Label>
+            <select
+              id="category"
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              value={formData.category}
+              onChange={handleInputChange}
+              required
+            >
+              <option value="">Select a category</option>
+              <option value="Digital Art">Digital Art</option>
+              <option value="Music">Music</option>
+              <option value="Writing">Writing</option>
+              <option value="Video">Video</option>
+              <option value="Photography">Photography</option>
+              <option value="Programming">Programming</option>
+              <option value="Design">Design</option>
+              <option value="Crafts">Crafts</option>
+            </select>
+          </div>
 
-      <div className="space-y-2">
-        <Label>Content File</Label>
-        <div className="border-2 border-dashed rounded-md p-6 flex flex-col items-center justify-center">
-          <Upload className="h-8 w-8 text-muted-foreground mb-2" />
-          <p className="text-sm text-muted-foreground mb-2">
-            {contentFile
-              ? contentFile.name
-              : "Drag & drop your content file here"}
-          </p>
-          <p className="text-xs text-muted-foreground mb-4">
-            Supports images, audio, video, PDF, and more (max 500MB)
-          </p>
-          <input
-            type="file"
-            id="contentFileInput"
-            className="hidden"
-            onChange={(e) => handleFileChange(e, "content")}
-          />
-          <Button
-            variant="outline"
-            type="button"
-            onClick={() => document.getElementById("contentFileInput")?.click()}
-          >
-            Select File
-          </Button>
+          <div className="space-y-2">
+            <Label>Content File</Label>
+            <div className="border-2 border-dashed rounded-md p-6 flex flex-col items-center justify-center">
+              <Upload className="h-8 w-8 text-muted-foreground mb-2" />
+              <p className="text-sm text-muted-foreground mb-2">
+                {contentFile
+                  ? contentFile.name
+                  : "Drag & drop your content file here"}
+              </p>
+              <p className="text-xs text-muted-foreground mb-4">
+                Supports images, audio, video, PDF, and more (max 500MB)
+              </p>
+              <input
+                type="file"
+                id="contentFileInput"
+                className="hidden"
+                onChange={(e) => handleFileChange(e, "content")}
+              />
+              <Button
+                variant="outline"
+                type="button"
+                onClick={() =>
+                  document.getElementById("contentFileInput")?.click()
+                }
+              >
+                Select File
+              </Button>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Thumbnail Image (Optional)</Label>
+            <div className="border-2 border-dashed rounded-md p-6 flex flex-col items-center justify-center">
+              <Upload className="h-8 w-8 text-muted-foreground mb-2" />
+              <p className="text-sm text-muted-foreground mb-2">
+                {thumbnailFile
+                  ? thumbnailFile.name
+                  : "Upload a thumbnail image"}
+              </p>
+              <p className="text-xs text-muted-foreground mb-4">
+                This will be displayed as the preview image (recommended)
+              </p>
+              <input
+                type="file"
+                id="thumbnailFileInput"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => handleFileChange(e, "thumbnail")}
+              />
+              <Button
+                variant="outline"
+                type="button"
+                onClick={() =>
+                  document.getElementById("thumbnailFileInput")?.click()
+                }
+              >
+                Select Image
+              </Button>
+            </div>
+          </div>
+          {isPremium && (
+            <div className="space-y-2">
+              <Label htmlFor="price">Price (ETN)</Label>
+              <Input
+                id="price"
+                type="number"
+                min="0.1"
+                step="0.1"
+                placeholder="5.00"
+                value={formData.price}
+                onChange={handleInputChange}
+                required={isPremium}
+              />
+              <p className="text-sm text-muted-foreground">
+                Set the price fans will pay to access this content.
+              </p>
+            </div>
+          )}
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="premium"
+              checked={isPremium}
+              onCheckedChange={setIsPremium}
+            />
+            <Label htmlFor="premium">Premium Content</Label>
+          </div>
         </div>
       </div>
-
-      <div className="space-y-2">
-        <Label>Thumbnail Image (Optional)</Label>
-        <div className="border-2 border-dashed rounded-md p-6 flex flex-col items-center justify-center">
-          <Upload className="h-8 w-8 text-muted-foreground mb-2" />
-          <p className="text-sm text-muted-foreground mb-2">
-            {thumbnailFile ? thumbnailFile.name : "Upload a thumbnail image"}
-          </p>
-          <p className="text-xs text-muted-foreground mb-4">
-            This will be displayed as the preview image (recommended)
-          </p>
-          <input
-            type="file"
-            id="thumbnailFileInput"
-            accept="image/*"
-            className="hidden"
-            onChange={(e) => handleFileChange(e, "thumbnail")}
-          />
-          <Button
-            variant="outline"
-            type="button"
-            onClick={() =>
-              document.getElementById("thumbnailFileInput")?.click()
-            }
-          >
-            Select Image
-          </Button>
-        </div>
+      <div className="p-6 pt-4 flex-shrink-0 border-t">
+        <Button type="submit" className="w-full " disabled={isLoading}>
+          {isLoading ? "Publishing..." : "Publish Content"}
+        </Button>
       </div>
-
-      <div className="flex items-center space-x-2">
-        <Switch
-          id="premium"
-          checked={isPremium}
-          onCheckedChange={setIsPremium}
-        />
-        <Label htmlFor="premium">Premium Content</Label>
-      </div>
-
-      {isPremium && (
-        <div className="space-y-2">
-          <Label htmlFor="price">Price (ETN)</Label>
-          <Input
-            id="price"
-            type="number"
-            min="0.1"
-            step="0.1"
-            placeholder="5.00"
-            value={formData.price}
-            onChange={handleInputChange}
-            required={isPremium}
-          />
-          <p className="text-sm text-muted-foreground">
-            Set the price fans will pay to access this content.
-          </p>
-        </div>
-      )}
-
-      <Button type="submit" className="w-full" disabled={isLoading}>
-        {isLoading ? "Publishing..." : "Publish Content"}
-      </Button>
     </form>
   );
 }
