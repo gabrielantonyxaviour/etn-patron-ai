@@ -48,6 +48,7 @@ import { DynamicWidget, useDynamicContext } from "@dynamic-labs/sdk-react-core";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import { useEnvironmentStore } from "@/components/context";
+import { registerCreator } from "@/lib/tx";
 
 // Types
 interface CreatorProfile {
@@ -129,7 +130,9 @@ interface DashboardMetrics {
 export default function CreatorDashboardPage() {
   const { address } = useWeb3Modal();
   const { user, primaryWallet } = useDynamicContext();
-  const { userProfile } = useEnvironmentStore((store) => store);
+  const { userProfile, publicClient, walletClient } = useEnvironmentStore(
+    (store) => store
+  );
 
   // State for API data
   const [isLoading, setIsLoading] = useState(true);
@@ -195,10 +198,8 @@ export default function CreatorDashboardPage() {
 
         if (response.ok) {
           const data = await response.json();
-          if (data) {
+          if (data.isRegistered) {
             setIsRegistered(true);
-            setCreatorProfile(data);
-
             setSettingsForm({
               subPrice: data.sub_price,
               twitter: data.twitter,
@@ -208,6 +209,8 @@ export default function CreatorDashboardPage() {
           } else {
             setIsRegistered(false);
           }
+
+          setCreatorProfile(data);
         } else {
           setIsRegistered(false);
         }
@@ -439,59 +442,59 @@ export default function CreatorDashboardPage() {
       return;
     }
 
+    if (!walletClient || !publicClient) {
+      toast.error("Missing clients", {
+        description: "Public and Wallet Clients are not initialized",
+      });
+      return;
+    }
+
     try {
       setIsCreateProfileLoading(true);
 
-      // Upload banner image if selected
-      let bannerUrl = "";
-      if (createProfileForm.bannerImage) {
-        const bannerFormData = new FormData();
-        bannerFormData.append("file", createProfileForm.bannerImage);
-        bannerFormData.append("wallet", primaryWallet.address);
-        bannerFormData.append("contentType", "banner");
+      const { hash, error } = await registerCreator(publicClient, walletClient);
 
-        const uploadResponse = await fetch("/api/upload", {
-          method: "POST",
-          body: bannerFormData,
-        });
+      if (hash.length > 0) {
+        const createProfileFormData = new FormData();
 
-        if (uploadResponse.ok) {
-          const uploadData = await uploadResponse.json();
-          bannerUrl = uploadData.url;
+        if (createProfileForm.bannerImage) {
+          createProfileFormData.append("banner", createProfileForm.bannerImage);
         }
-      }
 
-      // Create creator profile
-      const response = await fetch(
-        `/api/creators/wallet/${primaryWallet.address}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            category: createProfileForm.category,
-            subscription_price: parseFloat(createProfileForm.subscriptionPrice),
-            etn_payment_address: primaryWallet.address,
-            bio: userProfile?.bio || "",
-            wallet_address: primaryWallet.address,
-            banner_url: bannerUrl,
-            social_links: {
-              twitter: createProfileForm.twitter,
-              instagram: createProfileForm.instagram,
-            },
-          }),
+        createProfileFormData.append("wallet", primaryWallet.address);
+        createProfileFormData.append(
+          "sub_price",
+          createProfileForm.subscriptionPrice
+        );
+        createProfileFormData.append("twitter", createProfileForm.twitter);
+        createProfileFormData.append("instagram", createProfileForm.instagram);
+        createProfileFormData.append("category", createProfileForm.category);
+
+        // Create creator profile
+        const response = await fetch(
+          `/api/creators/wallet/${primaryWallet.address}`,
+          {
+            method: "POST",
+            body: createProfileFormData,
+          }
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+          setCreatorProfile(data);
+          setIsRegistered(true);
+
+          toast.success("Transaction Success", {
+            description: "Your Creator profile is created successfully",
+          });
+        } else {
+          throw new Error("Failed to create creator profile");
         }
-      );
-
-      if (response.ok) {
-        const data = await response.json();
-        setCreatorProfile(data);
-        setIsRegistered(true);
-
-        toast.success("Your creator profile has been created");
       } else {
-        throw new Error("Failed to create creator profile");
+        toast.error("Transaction Failed", {
+          description: "Something went wrong, Please Try Again. " + error,
+        });
+        return;
       }
     } catch (error) {
       console.error("Error registering creator:", error);
@@ -551,156 +554,156 @@ export default function CreatorDashboardPage() {
     }
   };
 
-  // if (isLoading && !creatorProfile) {
-  //   return (
-  //     <div className="container mx-auto py-12 px-4 text-center">
-  //       <h1 className="text-2xl font-bold mb-4">Loading Creator Dashboard</h1>
-  //       <div className="animate-pulse flex flex-col items-center">
-  //         <div className="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
-  //         <div className="h-4 bg-gray-200 rounded w-1/3"></div>
-  //       </div>
-  //     </div>
-  //   );
-  // }
+  if (isLoading && !creatorProfile) {
+    return (
+      <div className="container mx-auto py-12 px-4 text-center">
+        <h1 className="text-2xl font-bold mb-4">Loading Creator Dashboard</h1>
+        <div className="animate-pulse flex flex-col items-center">
+          <div className="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
+          <div className="h-4 bg-gray-200 rounded w-1/3"></div>
+        </div>
+      </div>
+    );
+  }
 
-  // if (primaryWallet == null && user == null) {
-  //   return (
-  //     <div className="container mx-auto py-20 px-4 text-center">
-  //       <h1 className="text-4xl font-bold mb-6">Creator Dashboard</h1>
-  //       <p className="text-muted-foreground mb-8 max-w-md mx-auto">
-  //         Connect your wallet to access your creator dashboard or register as a
-  //         new creator.
-  //       </p>
-  //       <div className="w-full flex justify-center">
-  //         <DynamicWidget />
-  //       </div>
-  //     </div>
-  //   );
-  // }
+  if (primaryWallet == null && user == null) {
+    return (
+      <div className="container mx-auto py-20 px-4 text-center">
+        <h1 className="text-4xl font-bold mb-6">Creator Dashboard</h1>
+        <p className="text-muted-foreground mb-8 max-w-md mx-auto">
+          Connect your wallet to access your creator dashboard or register as a
+          new creator.
+        </p>
+        <div className="w-full flex justify-center">
+          <DynamicWidget />
+        </div>
+      </div>
+    );
+  }
 
-  // if (!isRegistered) {
-  //   return (
-  //     <div className="container mx-auto py-16 px-4">
-  //       <div className="max-w-md mx-auto">
-  //         <Card>
-  //           <CardHeader>
-  //             <CardTitle>Become a Creator</CardTitle>
-  //             <CardDescription>
-  //               Register as a creator to start publishing content and receiving
-  //               micro-payments.
-  //             </CardDescription>
-  //           </CardHeader>
-  //           <form onSubmit={handleRegisterCreator}>
-  //             <CardContent>
-  //               <div className="space-y-4">
-  //                 <div className="space-y-2">
-  //                   <Label htmlFor="username">Username</Label>
-  //                   <Input
-  //                     id="username"
-  //                     placeholder="Choose a unique username"
-  //                     value={userProfile?.username || ""}
-  //                     required
-  //                     disabled
-  //                   />
-  //                 </div>
-  //                 <div className="space-y-2">
-  //                   <Label htmlFor="category">Primary Category</Label>
-  //                   <select
-  //                     id="category"
-  //                     className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-  //                     value={createProfileForm.category}
-  //                     onChange={handleCreateProfileInputChange}
-  //                     required
-  //                   >
-  //                     <option value="">Select a category</option>
-  //                     <option value="Digital Art">Digital Art</option>
-  //                     <option value="Music">Music</option>
-  //                     <option value="Writing">Writing</option>
-  //                     <option value="Video">Video</option>
-  //                     <option value="Photography">Photography</option>
-  //                     <option value="Programming">Programming</option>
-  //                     <option value="Design">Design</option>
-  //                     <option value="Crafts">Crafts</option>
-  //                   </select>
-  //                 </div>
-  //                 <div className="space-y-2">
-  //                   <Label htmlFor="subscriptionPrice">
-  //                     Subscription Price (in ETN)
-  //                   </Label>
-  //                   <Input
-  //                     id="subscriptionPrice"
-  //                     type="number"
-  //                     value={createProfileForm.subscriptionPrice}
-  //                     onChange={handleCreateProfileInputChange}
-  //                     required
-  //                   />
-  //                 </div>
-  //                 <div className="space-y-2">
-  //                   <Label htmlFor="twitter">Twitter</Label>
-  //                   <Input
-  //                     id="twitter"
-  //                     placeholder="@username"
-  //                     value={createProfileForm.twitter}
-  //                     onChange={handleCreateProfileInputChange}
-  //                   />
-  //                 </div>
-  //                 <div className="space-y-2">
-  //                   <Label htmlFor="instagram">Instagram</Label>
-  //                   <Input
-  //                     id="instagram"
-  //                     placeholder="@username"
-  //                     value={createProfileForm.instagram}
-  //                     onChange={handleCreateProfileInputChange}
-  //                   />
-  //                 </div>
-  //                 <div className="space-y-2">
-  //                   <Label htmlFor="bannerImage">Banner Image</Label>
-  //                   <div className="h-32 bg-muted rounded-md relative overflow-hidden">
-  //                     <input
-  //                       type="file"
-  //                       id="bannerImageInput"
-  //                       accept="image/*"
-  //                       className="hidden"
-  //                       onChange={handleCreateProfileBannerChange}
-  //                     />
-  //                     <Button
-  //                       variant="outline"
-  //                       size="sm"
-  //                       className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 gap-2"
-  //                       type="button"
-  //                       onClick={() =>
-  //                         document.getElementById("bannerImageInput")?.click()
-  //                       }
-  //                     >
-  //                       <Upload className="h-4 w-4" />
-  //                       Upload Banner
-  //                     </Button>
-  //                     {createProfileForm.bannerImage && (
-  //                       <div className="absolute bottom-2 left-2 bg-background/80 px-2 py-1 rounded text-xs">
-  //                         Selected: {createProfileForm.bannerImage.name}
-  //                       </div>
-  //                     )}
-  //                   </div>
-  //                 </div>
-  //               </div>
-  //             </CardContent>
-  //             <CardFooter>
-  //               <Button
-  //                 className="w-full"
-  //                 type="submit"
-  //                 disabled={isCreateProfileLoading}
-  //               >
-  //                 {isCreateProfileLoading
-  //                   ? "Registering..."
-  //                   : "Register as Creator"}
-  //               </Button>
-  //             </CardFooter>
-  //           </form>
-  //         </Card>
-  //       </div>
-  //     </div>
-  //   );
-  // }
+  if (!isRegistered) {
+    return (
+      <div className="container mx-auto py-16 px-4">
+        <div className="max-w-md mx-auto">
+          <Card>
+            <CardHeader>
+              <CardTitle>Become a Creator</CardTitle>
+              <CardDescription>
+                Register as a creator to start publishing content and receiving
+                micro-payments.
+              </CardDescription>
+            </CardHeader>
+            <form onSubmit={handleRegisterCreator}>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="username">Username</Label>
+                    <Input
+                      id="username"
+                      placeholder="Choose a unique username"
+                      value={userProfile?.username || ""}
+                      required
+                      disabled
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="category">Primary Category</Label>
+                    <select
+                      id="category"
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                      value={createProfileForm.category}
+                      onChange={handleCreateProfileInputChange}
+                      required
+                    >
+                      <option value="">Select a category</option>
+                      <option value="Digital Art">Digital Art</option>
+                      <option value="Music">Music</option>
+                      <option value="Writing">Writing</option>
+                      <option value="Video">Video</option>
+                      <option value="Photography">Photography</option>
+                      <option value="Programming">Programming</option>
+                      <option value="Design">Design</option>
+                      <option value="Crafts">Crafts</option>
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="subscriptionPrice">
+                      Subscription Price (in ETN)
+                    </Label>
+                    <Input
+                      id="subscriptionPrice"
+                      type="number"
+                      value={createProfileForm.subscriptionPrice}
+                      onChange={handleCreateProfileInputChange}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="twitter">Twitter</Label>
+                    <Input
+                      id="twitter"
+                      placeholder="@username"
+                      value={createProfileForm.twitter}
+                      onChange={handleCreateProfileInputChange}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="instagram">Instagram</Label>
+                    <Input
+                      id="instagram"
+                      placeholder="@username"
+                      value={createProfileForm.instagram}
+                      onChange={handleCreateProfileInputChange}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="bannerImage">Banner Image</Label>
+                    <div className="h-32 bg-muted rounded-md relative overflow-hidden">
+                      <input
+                        type="file"
+                        id="bannerImageInput"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleCreateProfileBannerChange}
+                      />
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 gap-2"
+                        type="button"
+                        onClick={() =>
+                          document.getElementById("bannerImageInput")?.click()
+                        }
+                      >
+                        <Upload className="h-4 w-4" />
+                        Upload Banner
+                      </Button>
+                      {createProfileForm.bannerImage && (
+                        <div className="absolute bottom-2 left-2 bg-background/80 px-2 py-1 rounded text-xs">
+                          Selected: {createProfileForm.bannerImage.name}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+              <CardFooter>
+                <Button
+                  className="w-full"
+                  type="submit"
+                  disabled={isCreateProfileLoading}
+                >
+                  {isCreateProfileLoading
+                    ? "Registering..."
+                    : "Register as Creator"}
+                </Button>
+              </CardFooter>
+            </form>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   // Calculate earnings data
   const earningsData = calculateMonthlyEarnings();

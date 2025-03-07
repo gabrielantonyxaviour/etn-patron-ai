@@ -29,6 +29,34 @@ export async function canDecryptContent(
 
 // Write Functions
 
+export async function registerCreator(
+  publicClient: PublicClient,
+  walletClient: WalletClient
+): Promise<{ hash: string; error: string }> {
+  try {
+    const { request } = await publicClient.simulateContract({
+      address: deployments[walletClient.chain?.id || sepolia.id],
+      abi: etnPatronAbi,
+      functionName: "registerCreator",
+      args: [],
+      account: walletClient.account,
+    });
+
+    const hash = await walletClient.sendTransaction({
+      ...request,
+      to: request.address,
+    });
+    await publicClient.waitForTransactionReceipt({ hash });
+
+    return { hash, error: "" };
+  } catch (e) {
+    return {
+      hash: "",
+      error: JSON.stringify(e),
+    };
+  }
+}
+
 export async function updatePlatformFee(
   publicClient: PublicClient,
   walletClient: WalletClient,

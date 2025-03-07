@@ -165,7 +165,7 @@ export function PublishContentForm({
         });
       } else {
         toast.error("Transaction Failed", {
-          description: "Something went wrong, Please Try Again",
+          description: "Something went wrong, Please Try Again. " + error,
         });
         return;
       }
