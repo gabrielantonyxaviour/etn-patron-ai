@@ -71,14 +71,11 @@ export function Web3Provider({ children }: Web3ProviderProps) {
                     blockExplorerUrls: [electroneum.blockExplorers.default.url],
                     chainId: electroneum.id,
                     chainName: electroneum.name,
-                    iconUrls: [
-                      "https://app.dynamic.xyz/assets/networks/eth.svg",
-                    ],
+                    iconUrls: ["https://etn-patron-ai.vercel.app/chain.png"],
                     name: electroneum.name,
                     nativeCurrency: {
                       ...electroneum.nativeCurrency,
-                      iconUrl:
-                        "https://app.dynamic.xyz/assets/networks/eth.svg",
+                      iconUrl: "https://etn-patron-ai.vercel.app/chain.png",
                     },
                     networkId: electroneum.id,
                     rpcUrls: [
