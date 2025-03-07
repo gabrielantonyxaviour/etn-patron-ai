@@ -10,7 +10,7 @@ export async function GET(
   // First get the user
   const { data: user, error: userError } = await supabase
     .from("users")
-    .select("id")
+    .select("*")
     .eq("eth_wallet_address", address)
     .single();
 
@@ -29,5 +29,22 @@ export async function GET(
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json(data || null);
+  const responseData = {
+    id: data.id,
+    category: data.category,
+    created_at: data.created_at,
+    sub_price: data.sub_price,
+    banner_url: data.banner_url,
+    verified: data.verified,
+    social_links: data.social_links,
+    user: {
+      username: user.username,
+      bio: user.bio,
+      avatar_url: user.avatar_url,
+      full_name: user.full_name,
+      email: user.email,
+    },
+  };
+
+  return NextResponse.json(responseData || null);
 }
