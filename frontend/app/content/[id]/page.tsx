@@ -287,7 +287,7 @@ export default function ContentPage() {
         <AlertCircle className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
         <h2 className="text-2xl font-bold mb-2">Content Not Found</h2>
         <p className="text-muted-foreground mb-6">
-          The content you're looking for may have been removed or doesn't exist.
+          The content you&apos;re looking for may have been removed or doesn&apos;t exist.
         </p>
         <Button asChild>
           <Link href="/explore">Explore Content</Link>

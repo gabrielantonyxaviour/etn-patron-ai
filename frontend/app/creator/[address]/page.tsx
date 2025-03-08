@@ -204,7 +204,7 @@ export default function CreatorProfilePage() {
         <AlertCircle className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
         <h1 className="text-2xl font-bold mb-4">Creator Not Found</h1>
         <p className="text-muted-foreground mb-6">
-          The creator you're looking for doesn't exist or has been removed.
+          The creator you&apos;re looking for doesn&apos;t exist or has been removed.
         </p>
         <Button asChild>
           <Link href="/explore">Explore Creators</Link>
@@ -376,7 +376,7 @@ export default function CreatorProfilePage() {
             <div className="text-center py-16">
               <h2 className="text-xl font-medium mb-2">No content yet</h2>
               <p className="text-muted-foreground">
-                This creator hasn't published any content yet.
+                This creator hasn&apos;t published any content yet.
               </p>
             </div>
           ) : (
@@ -501,7 +501,7 @@ export default function CreatorProfilePage() {
               <div className="text-center py-16">
                 <h2 className="text-xl font-medium mb-2">No premium content</h2>
                 <p className="text-muted-foreground">
-                  This creator hasn't published any premium content yet.
+                  This creator hasn&apos;t published any premium content yet.
                 </p>
               </div>
             )}
@@ -562,7 +562,7 @@ export default function CreatorProfilePage() {
               <div className="text-center py-16">
                 <h2 className="text-xl font-medium mb-2">No free content</h2>
                 <p className="text-muted-foreground">
-                  This creator hasn't published any free content yet.
+                  This creator hasn&apos;t published any free content yet.
                 </p>
               </div>
             )}
