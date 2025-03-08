@@ -28,9 +28,9 @@ export async function GET(
   const responseData = {
     id: data.id,
     category: data.category,
-    created_at: data.created_at,
     sub_price: data.sub_price,
     banner_url: data.banner_url,
+    created_at: data.created_at,
     verified: data.verified,
     social_links: data.social_links,
     isRegistered: true,

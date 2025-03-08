@@ -13,7 +13,6 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -37,7 +36,6 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -48,12 +46,12 @@ import { DynamicWidget, useDynamicContext } from "@dynamic-labs/sdk-react-core";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import { useEnvironmentStore } from "@/components/context";
-import { getRawRegisterCreator } from "@/lib/tx";
-import { Hex } from "viem";
 import { isEthereumWallet } from "@dynamic-labs/ethereum";
-import { deployments } from "@/lib/constants";
-import { electroneum, sepolia } from "viem/chains";
 import { uploadImageToPinata } from "@/lib/pinata";
+import { getRawRegisterCreator } from "@/lib/tx";
+import { electroneum, sepolia } from "viem/chains";
+import { deployments } from "@/lib/constants";
+import { Hex } from "viem";
 
 // Types
 interface CreatorProfile {
@@ -68,13 +66,7 @@ interface CreatorProfile {
     instagram?: string;
     [key: string]: string | undefined;
   };
-  user: {
-    username: string;
-    bio?: string;
-    avatar_url: string;
-    full_name: string;
-    email: string;
-  };
+  isRegistered: boolean;
 }
 
 interface ContentItem {
@@ -154,13 +146,7 @@ export default function CreatorDashboardPage() {
       twitter: "",
       instagram: "",
     },
-    user: {
-      username: "",
-      bio: "",
-      avatar_url: "",
-      full_name: "",
-      email: "",
-    },
+    isRegistered: false,
   });
   const [content, setContent] = useState<ContentItem[]>([]);
   const [subscribers, setSubscribers] = useState<Subscriber[]>([]);
@@ -226,9 +212,9 @@ export default function CreatorDashboardPage() {
         setIsLoading(false);
       }
     }
-
-    checkCreatorStatus();
-  }, [primaryWallet?.address, userProfile]);
+    if (userProfile)
+      checkCreatorStatus();
+  }, [userProfile]);
 
   // Fetch creator content
   useEffect(() => {
@@ -453,13 +439,12 @@ export default function CreatorDashboardPage() {
       const isProduction = JSON.parse(
         process.env.NEXT_PUBLIC_IS_PRODUCTION || "false"
       );
-      // const data = getRawRegisterCreator() as Hex;
-      // const walletClient = await primaryWallet.getWalletClient();
-      // const hash = await walletClient.sendTransaction({
-      //   to: deployments[isProduction ? electroneum.id : sepolia.id],
-      //   data: data,
-      // });
-      let hash = '0x'
+      const data = getRawRegisterCreator() as Hex;
+      const walletClient = await primaryWallet.getWalletClient();
+      const hash = await walletClient.sendTransaction({
+        to: deployments[isProduction ? electroneum.id : sepolia.id],
+        data: data,
+      });
       if (hash.length > 0) {
         const banner_url = createProfileForm.bannerImage ? await uploadImageToPinata(createProfileForm.bannerImage) : null;
         const createProfileData = {
@@ -496,6 +481,12 @@ export default function CreatorDashboardPage() {
 
           toast.success("Transaction Success", {
             description: "Your Creator profile is created successfully",
+            action: {
+              label: "View Tx",
+              onClick: () => {
+                window.open("https://blockexplorer.electroneum.com/tx/" + hash, "_blank");
+              }
+            }
           });
         } else {
           throw new Error("Failed to create creator profile");
@@ -1020,7 +1011,7 @@ export default function CreatorDashboardPage() {
                     <Label htmlFor="username">Username</Label>
                     <Input
                       id="username"
-                      value={creatorProfile.user.username}
+                      value={userProfile?.username}
                       required
                       disabled
                     />
