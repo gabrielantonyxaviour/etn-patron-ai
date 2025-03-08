@@ -332,7 +332,7 @@ export default function CreatorDashboardPage() {
         (tx) =>
           tx.status === "completed" &&
           new Date(tx.created_at) >=
-            new Date(now.getFullYear(), now.getMonth(), 1)
+          new Date(now.getFullYear(), now.getMonth(), 1)
       )
       .reduce((sum, tx) => sum + tx.amount, 0);
 
@@ -342,7 +342,7 @@ export default function CreatorDashboardPage() {
           tx.status === "completed" &&
           new Date(tx.created_at) >= lastMonth &&
           new Date(tx.created_at) <
-            new Date(now.getFullYear(), now.getMonth(), 1)
+          new Date(now.getFullYear(), now.getMonth(), 1)
       )
       .reduce((sum, tx) => sum + tx.amount, 0);
 
@@ -499,11 +499,22 @@ export default function CreatorDashboardPage() {
         });
         return;
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error registering creator:", error);
-      toast.error("Create Profile Error", {
-        description: "Failed to create your creator profile. Please try again.",
-      });
+      if ((error as string).includes("User rejected the request")) {
+        toast.error("Transaction Rejected", {
+          description: "What made you change your mind?",
+        });
+      } else if ((error as string).includes("Transaction Error")) {
+        toast.error("Transaction Error", {
+          description: "Something went wrong, Please Try Again. ",
+        })
+      } else {
+        toast.error("Create Profile Error", {
+          description: "Failed to create your creator profile. Please try again.",
+        });
+      }
+
     } finally {
       setIsCreateProfileLoading(false);
     }
@@ -767,9 +778,8 @@ export default function CreatorDashboardPage() {
         <StatCard
           title="Total Earnings"
           value={`${dashboardMetrics.totalEarnings.toFixed(2)} ETN`}
-          description={`${
-            earningsData.percentChange > 0 ? "+" : ""
-          }${earningsData.percentChange.toFixed(1)}% from last month`}
+          description={`${earningsData.percentChange > 0 ? "+" : ""
+            }${earningsData.percentChange.toFixed(1)}% from last month`}
           icon={<DollarSign className="h-4 w-4" />}
           trend={earningsData.percentChange > 0 ? "up" : "down"}
         />
@@ -790,9 +800,8 @@ export default function CreatorDashboardPage() {
         <StatCard
           title="Tips Received"
           value={`${earningsBySource.tips.toFixed(2)} ETN`}
-          description={`${
-            transactions.filter((tx) => tx.transaction_type === "tip").length
-          } tips received`}
+          description={`${transactions.filter((tx) => tx.transaction_type === "tip").length
+            } tips received`}
           icon={<Zap className="h-4 w-4" />}
           trend="up"
         />
@@ -887,7 +896,7 @@ export default function CreatorDashboardPage() {
                           <p className="text-muted-foreground">
                             {(item.is_premium
                               ? item.access_price *
-                                Math.floor(item.views_count / 3)
+                              Math.floor(item.views_count / 3)
                               : 0
                             ).toFixed(2)}{" "}
                             ETN
@@ -920,7 +929,7 @@ export default function CreatorDashboardPage() {
                           <p className="text-muted-foreground">
                             {(item.is_premium
                               ? item.access_price *
-                                Math.floor(item.views_count / 3)
+                              Math.floor(item.views_count / 3)
                               : 0
                             ).toFixed(2)}{" "}
                             ETN
@@ -1108,9 +1117,9 @@ export default function CreatorDashboardPage() {
                         {new Date().getMonth() === 0
                           ? "December"
                           : new Date(
-                              0,
-                              new Date().getMonth() - 1
-                            ).toLocaleString("default", { month: "long" })}{" "}
+                            0,
+                            new Date().getMonth() - 1
+                          ).toLocaleString("default", { month: "long" })}{" "}
                         {new Date().getFullYear()}
                       </span>
                     </p>
