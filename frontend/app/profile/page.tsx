@@ -28,6 +28,9 @@ export default function ProfilePage() {
   const { userProfile, isProfileLoading } = useEnvironmentStore(
     (state) => state
   );
+  const [balance, setBalance] = useState("0");
+  const [balanceInUSD, setBalanceInUSD] = useState("0.00");
+
 
   const [isUpdating, setIsUpdating] = useState(false);
   const [formData, setFormData] = useState({
@@ -52,6 +55,16 @@ export default function ProfilePage() {
       });
     }
   }, [userProfile]);
+
+  useEffect(() => {
+    if (primaryWallet) {
+      (async function () {
+        const fetchedBalance = await primaryWallet.getBalance();
+        setBalance(fetchedBalance || "0");
+        setBalanceInUSD((parseFloat(fetchedBalance || "0") * 0.002).toFixed(2));
+      })()
+    }
+  }, [primaryWallet])
 
   // Fetch transactions
   useEffect(() => {
@@ -415,11 +428,10 @@ export default function ProfilePage() {
                       </CardHeader>
                       <CardContent>
                         <div className="text-2xl font-bold">
-                          {/* This would come from blockchain API in a real implementation */}
-                          43.12 ETN
+                          {balance} ETN
                         </div>
                         <p className="text-xs text-muted-foreground mt-1">
-                          ≈ $12.93 USD
+                          ≈ ${balanceInUSD} USD
                         </p>
                       </CardContent>
                     </Card>
@@ -470,10 +482,10 @@ export default function ProfilePage() {
                                 {tx.transaction_type === "subscription"
                                   ? "Subscription Payment"
                                   : tx.transaction_type === "content_purchase"
-                                  ? "Content Purchase"
-                                  : tx.transaction_type === "tip"
-                                  ? "Tip"
-                                  : "Transaction"}
+                                    ? "Content Purchase"
+                                    : tx.transaction_type === "tip"
+                                      ? "Tip"
+                                      : "Transaction"}
                               </div>
                               <div className="text-sm text-muted-foreground">
                                 {new Date(tx.created_at).toLocaleDateString()}
@@ -481,11 +493,10 @@ export default function ProfilePage() {
                             </div>
                             <div className="text-right">
                               <div
-                                className={`font-medium ${
-                                  tx.status === "completed"
-                                    ? "text-green-600 dark:text-green-500"
-                                    : ""
-                                }`}
+                                className={`font-medium ${tx.status === "completed"
+                                  ? "text-green-600 dark:text-green-500"
+                                  : ""
+                                  }`}
                               >
                                 {tx.amount.toFixed(2)} ETN
                               </div>
