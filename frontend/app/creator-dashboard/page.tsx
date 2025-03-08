@@ -673,6 +673,17 @@ export default function CreatorDashboardPage() {
                   <div className="space-y-2">
                     <Label htmlFor="bannerImage">Banner Image</Label>
                     <div className="h-32 bg-muted rounded-md relative overflow-hidden">
+                      {
+                        createProfileForm.bannerImage && <img
+                          src={
+                            createProfileForm.bannerImage
+                              ? URL.createObjectURL(createProfileForm.bannerImage)
+                              : "/content/placeholder.jpg"
+                          }
+                          alt="Banner Image"
+                          className="w-full h-full object-cover"
+                        />
+                      }
                       <input
                         type="file"
                         id="bannerImageInput"
