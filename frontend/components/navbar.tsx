@@ -10,26 +10,16 @@ import {
   Home,
   Compass,
   LayoutDashboard,
-  Wallet,
   User,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { DynamicWidget, useDynamicContext } from "@dynamic-labs/sdk-react-core";
-import { useEnvironmentStore } from "./context";
-import { useEffect } from "react";
 import { WalletProfileCheck } from "./wallet-profile-check";
-import { createPublicClient, createWalletClient, http } from "viem";
-import { electroneum, sepolia } from "viem/chains";
-import { createClient } from "@dynamic-labs/client";
-import { ViemExtension } from "@dynamic-labs/viem-extension";
 
 export function Navbar() {
   const pathname = usePathname();
   const { primaryWallet, user } = useDynamicContext();
-  const { setPublicClient, setWalletClient } = useEnvironmentStore(
-    (state) => state
-  );
 
   const routes = [
     {

@@ -53,6 +53,7 @@ import { Hex } from "viem";
 import { isEthereumWallet } from "@dynamic-labs/ethereum";
 import { deployments } from "@/lib/constants";
 import { electroneum, sepolia } from "viem/chains";
+import { uploadImageToPinata } from "@/lib/pinata";
 
 // Types
 interface CreatorProfile {
@@ -134,7 +135,7 @@ interface DashboardMetrics {
 export default function CreatorDashboardPage() {
   const { address } = useWeb3Modal();
   const { user, primaryWallet } = useDynamicContext();
-  const { userProfile, publicClient, walletClient } = useEnvironmentStore(
+  const { userProfile } = useEnvironmentStore(
     (store) => store
   );
 
@@ -197,7 +198,7 @@ export default function CreatorDashboardPage() {
       try {
         setIsLoading(true);
         const response = await fetch(
-          `/api/creators/wallet/${primaryWallet.address}`
+          `/api/creators/user_id/${userProfile?.id}`
         );
 
         if (response.ok) {
@@ -446,39 +447,45 @@ export default function CreatorDashboardPage() {
       return;
     }
 
+
     try {
       setIsCreateProfileLoading(true);
       const isProduction = JSON.parse(
         process.env.NEXT_PUBLIC_IS_PRODUCTION || "false"
       );
-      const data = getRawRegisterCreator() as Hex;
-      const walletClient = await primaryWallet.getWalletClient();
-      const hash = await walletClient.sendTransaction({
-        to: deployments[isProduction ? electroneum.id : sepolia.id],
-        data: data,
-      });
+      // const data = getRawRegisterCreator() as Hex;
+      // const walletClient = await primaryWallet.getWalletClient();
+      // const hash = await walletClient.sendTransaction({
+      //   to: deployments[isProduction ? electroneum.id : sepolia.id],
+      //   data: data,
+      // });
+      let hash = '0x'
       if (hash.length > 0) {
-        const createProfileFormData = new FormData();
+        const banner_url = createProfileForm.bannerImage ? await uploadImageToPinata(createProfileForm.bannerImage) : null;
+        const createProfileData = {
+          user_id: userProfile?.id,
+          sub_price: createProfileForm.subscriptionPrice,
+          banner_url,
+          category: createProfileForm.category,
+          social_links: {
+            twitter: createProfileForm.twitter,
+            instagram: createProfileForm.instagram
+          },
+          verified: false,
+        };
 
-        if (createProfileForm.bannerImage) {
-          createProfileFormData.append("banner", createProfileForm.bannerImage);
-        }
-
-        createProfileFormData.append("wallet", primaryWallet.address);
-        createProfileFormData.append(
-          "sub_price",
-          createProfileForm.subscriptionPrice
-        );
-        createProfileFormData.append("twitter", createProfileForm.twitter);
-        createProfileFormData.append("instagram", createProfileForm.instagram);
-        createProfileFormData.append("category", createProfileForm.category);
+        console.log("Create profile data")
+        console.log(createProfileData)
 
         // Create creator profile
         const response = await fetch(
-          `/api/creators/wallet/${primaryWallet.address}`,
+          `/api/creators/user_id/${primaryWallet.address}`,
           {
             method: "POST",
-            body: createProfileFormData,
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(createProfileData),
           }
         );
 
@@ -532,21 +539,22 @@ export default function CreatorDashboardPage() {
     try {
       setIsLoading(true);
 
-      const updateFormData = new FormData();
-      if (settingsForm.bannerImage) {
-        updateFormData.append("banner", settingsForm.bannerImage);
-      }
-      updateFormData.append("wallet", primaryWallet.address);
-      updateFormData.append("twitter", settingsForm.twitter);
-      updateFormData.append("instagram", settingsForm.instagram);
-      updateFormData.append("subPrice", settingsForm.subPrice);
+      const updateData = {
+        wallet: primaryWallet.address,
+        twitter: settingsForm.twitter,
+        instagram: settingsForm.instagram,
+        subPrice: settingsForm.subPrice,
+      };
 
       // Update creator profile
       const response = await fetch(
-        `/api/creators/wallet/${primaryWallet.address}`,
+        `/api/creators/user_id/${primaryWallet.address}`,
         {
           method: "PUT",
-          body: updateFormData,
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(updateData),
         }
       );
 

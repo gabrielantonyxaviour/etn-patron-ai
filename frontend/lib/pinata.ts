@@ -44,7 +44,7 @@ export async function uploadImageToPinata(image: File): Promise<string> {
   });
 
   const upload = await pinata.upload.file(image);
-  console.log("JSON Upload successful:", upload);
+  console.log("Image Upload successful:", upload);
   //   const data = await pinata.gateways.get(upload.cid);
   //   console.log(data);
   const url = await pinata.gateways.createSignedURL({

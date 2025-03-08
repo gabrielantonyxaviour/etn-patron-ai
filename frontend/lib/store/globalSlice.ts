@@ -2,13 +2,9 @@ import { PublicClient, WalletClient } from "viem";
 import { StateCreator } from "zustand";
 
 interface GlobalState {
-  walletClient: WalletClient | null;
-  publicClient: PublicClient | null;
 }
 
 interface GlobalActions {
-  setWalletClient: (w: WalletClient) => void;
-  setPublicClient: (p: PublicClient) => void;
 }
 
 export type GlobalSlice = GlobalState & GlobalActions;
@@ -25,6 +21,4 @@ export const createGlobalSlice: StateCreator<
   GlobalSlice
 > = (set) => ({
   ...initialGlobalState,
-  setPublicClient: () => set((state) => ({ publicClient: state.publicClient })),
-  setWalletClient: () => set((state) => ({ walletClient: state.walletClient })),
 });
