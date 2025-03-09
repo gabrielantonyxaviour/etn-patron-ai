@@ -120,43 +120,17 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Verify the creator owns this wallet
-  const { data: creatorProfile, error: creatorError } = await supabase
-    .from("creator_profiles")
-    .select(
-      `
-      id,
-      users!creator_profiles_user_id_fkey(eth_wallet_address)
-    `
-    )
-    .eq("id", body.creator_id)
-    .single();
-
-  if (creatorError || !creatorProfile) {
-    return NextResponse.json(
-      { error: "Creator profile not found" },
-      { status: 404 }
-    );
-  }
-
-  if (
-    creatorProfile.users[0].eth_wallet_address.toLowerCase() !==
-    body.wallet_address.toLowerCase()
-  ) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
-  }
-
   const { data, error } = await supabase
     .from("content")
     .insert({
       creator_id: body.creator_id,
-      title: body.title,
-      description: body.description,
-      content_url: body.content_url,
-      thumbnail_url: body.thumbnail_url,
-      content_type: body.content_type,
+      caption: body.caption,
+      content_url: body.post_url,
       is_premium: body.is_premium,
-      access_price: body.access_price,
+      access_price: body.price,
+      content_hash: body.content_hash,
+      views_count: 0,
+      likes_count: 0
     })
     .select()
     .single();

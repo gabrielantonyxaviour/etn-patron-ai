@@ -18,8 +18,7 @@ import { electroneum, sepolia } from "viem/chains";
 import { Hex } from "viem";
 
 interface PublishContentFormProps {
-  creatorId?: string;
-  walletAddress?: string;
+  creatorId: string;
 }
 
 interface FormState {
@@ -32,9 +31,7 @@ interface FormState {
 
 export function PublishContentForm({
   creatorId,
-  walletAddress,
 }: PublishContentFormProps) {
-  const { publicClient, walletClient } = useEnvironmentStore((store) => store);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const { primaryWallet } = useDynamicContext();
 
@@ -67,8 +64,8 @@ export function PublishContentForm({
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-
-    if (!creatorId || !walletAddress) {
+    console.log(creatorId)
+    if (!creatorId) {
       toast.error("Creator information is missing");
       return;
     }
@@ -94,16 +91,20 @@ export function PublishContentForm({
       toast.info("Encrypting Content", {
         description: "Your post is getting encrypted using Lit Protocol",
       });
-
+      console.log("Uploading image to Pinata...");
       const imageUrl = await uploadImageToPinata(formData.contentFile);
+      console.log("Image uploaded to Pinata:", imageUrl);
 
       let modifiedContent: string = "";
       let dataHash: string = "";
 
       if (formData.isPremium) {
+        console.log("Encrypting content for premium post...");
         const { ciphertext, dataToEncryptHash } = await encrypt(imageUrl);
         dataHash = dataToEncryptHash;
         modifiedContent = ciphertext;
+        console.log("Content encrypted:", ciphertext);
+        console.log("Data hash:", dataToEncryptHash);
       } else {
         modifiedContent = imageUrl;
       }
@@ -124,26 +125,29 @@ export function PublishContentForm({
       if (hash.length > 0) {
         console.log("Transaction Success");
         console.log(hash);
-        const createPostData = new FormData();
 
-        // Add user data to FormData
-        createPostData.append("caption", formData.caption);
-        createPostData.append("post_url", imageUrl);
-        createPostData.append("category", formData.category);
-        createPostData.append("isPremium", formData.isPremium.toString());
-        createPostData.append("isPremium", formData.price);
-        createPostData.append("txHash", hash);
-        createPostData.append("dataHash", dataHash);
-
-        // Create content
+        console.log({
+          id: creatorId,
+          caption: formData.caption,
+          post_url: imageUrl,
+          category: formData.category,
+          isPremium: formData.isPremium,
+          price: formData.price,
+          content_hash: dataHash,
+        })
         const response = await fetch("/api/content", {
           method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
           body: JSON.stringify({
+            creator_id: creatorId,
             caption: formData.caption,
             post_url: imageUrl,
             category: formData.category,
-            isPremium: formData.isPremium,
+            is_premium: formData.isPremium,
             price: formData.price,
+            content_hash: dataHash,
           }),
         });
 

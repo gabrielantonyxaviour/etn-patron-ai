@@ -53,6 +53,7 @@ import { getRawRegisterCreator } from "@/lib/tx";
 import { electroneum, sepolia } from "viem/chains";
 import { deployments } from "@/lib/constants";
 import { Hex } from "viem";
+import { dataTagErrorSymbol } from "@tanstack/react-query";
 
 // Types
 interface CreatorProfile {
@@ -203,7 +204,16 @@ export default function CreatorDashboardPage() {
             setIsRegistered(false);
           }
 
-          setCreatorProfile(data);
+          setCreatorProfile({
+            id: data.id,
+            category: data.category,
+            created_at: data.created_at,
+            sub_price: data.sub_price,
+            banner_url: data.banner_url,
+            verified: data.verified,
+            social_links: data.social_links,
+            isRegistered: true,
+          });
         } else {
           setIsRegistered(false);
         }
@@ -478,11 +488,20 @@ export default function CreatorDashboardPage() {
 
         if (response.ok) {
           const data = await response.json();
-          setCreatorProfile(data);
+          setCreatorProfile({
+            id: data.id,
+            category: data.category,
+            created_at: data.created_at,
+            sub_price: data.sub_price,
+            banner_url: data.banner_url,
+            verified: data.verified,
+            social_links: data.social_links,
+            isRegistered: true,
+          });
           setSettingsForm({
             subPrice: data.sub_price,
-            twitter: data.twitter,
-            instagram: data.instagram,
+            twitter: data.social_links.twitter,
+            instagram: data.social_links.instagram,
             bannerImage: data.banner_url,
           })
           setIsRegistered(true);
@@ -780,7 +799,6 @@ export default function CreatorDashboardPage() {
 
               <PublishContentForm
                 creatorId={creatorProfile?.id}
-                walletAddress={primaryWallet?.address}
               />
             </DialogContent>
           </Dialog>
@@ -873,7 +891,6 @@ export default function CreatorDashboardPage() {
 
                       <PublishContentForm
                         creatorId={creatorProfile?.id}
-                        walletAddress={primaryWallet?.address}
                       />
                     </DialogContent>
                   </Dialog>
