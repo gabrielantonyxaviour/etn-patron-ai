@@ -29,6 +29,7 @@ import {
   Edit,
   Eye,
   AlertCircle,
+  CircleDashedIcon,
 } from "lucide-react";
 import Link from "next/link";
 import { useWeb3Modal } from "@/hooks/use-web3";
@@ -134,6 +135,7 @@ export default function CreatorDashboardPage() {
   // State for API data
   const [isLoading, setIsLoading] = useState(true);
   const [isCreateProfileLoading, setIsCreateProfileLoading] = useState(false);
+  const [isProfileUpdating, setIsProfileUpdating] = useState(false);
   const [isRegistered, setIsRegistered] = useState(false);
   const [creatorProfile, setCreatorProfile] = useState<CreatorProfile>({
     id: "",
@@ -193,9 +195,9 @@ export default function CreatorDashboardPage() {
             setIsRegistered(true);
             setSettingsForm({
               subPrice: data.sub_price,
-              twitter: data.twitter,
-              instagram: data.instagram,
-              bannerImage: null,
+              twitter: data.social_links.twitter,
+              instagram: data.social_links.instagram,
+              bannerImage: data.banner_url,
             });
           } else {
             setIsRegistered(false);
@@ -534,18 +536,20 @@ export default function CreatorDashboardPage() {
     }
 
     try {
-      setIsLoading(true);
+      setIsProfileUpdating(true);
 
       const updateData = {
-        wallet: primaryWallet.address,
         twitter: settingsForm.twitter,
         instagram: settingsForm.instagram,
-        subPrice: settingsForm.subPrice,
+        sub_price: settingsForm.subPrice,
       };
+
+
+      console.log(updateData)
 
       // Update creator profile
       const response = await fetch(
-        `/api/creators/user_id/${primaryWallet.address}`,
+        `/api/creators/user_id/${userProfile?.id}`,
         {
           method: "PUT",
           headers: {
@@ -569,7 +573,7 @@ export default function CreatorDashboardPage() {
       console.error("Error updating profile:", error);
       toast.error("Failed to update your profile. Please try again.");
     } finally {
-      setIsLoading(false);
+      setIsProfileUpdating(false);
     }
   };
 
@@ -600,7 +604,7 @@ export default function CreatorDashboardPage() {
     );
   }
 
-  if (!isRegistered) {
+  if (!isRegistered && !isLoading) {
     return (
       <div className="container mx-auto py-16 px-4">
         <div className="max-w-md mx-auto">
@@ -1063,6 +1067,14 @@ export default function CreatorDashboardPage() {
                   </div>
                 </div>
               </CardContent>
+              <CardFooter className="flex justify-end">
+                <Button type="submit" disabled={isProfileUpdating} >
+                  {isProfileUpdating ? <div className="flex space-x-2">
+                    <CircleDashedIcon className="h-5 w-5 animate-spin" />
+                    <p>Updating...</p>
+                  </div> : <p>Update Settings</p>}
+                </Button>
+              </CardFooter>
             </form>
             {/* {content.length > 0 && (
               <CardFooter>

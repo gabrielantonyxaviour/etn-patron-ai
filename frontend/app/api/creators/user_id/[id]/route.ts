@@ -47,13 +47,22 @@ export async function PUT(
   const { id } = await context.params;
   const updateData = await req.json();
 
+  console.log({
+    social_links: {
+      twitter: updateData.twitter,
+      instagram: updateData.instagram
+    },
+    sub_price: updateData.sub_price,
+  })
+
   const { data, error } = await supabase
     .from("creator_profiles")
     .update({
-      wallet: updateData.wallet,
-      twitter: updateData.twitter,
-      instagram: updateData.instagram,
-      sub_price: updateData.subPrice,
+      social_links: {
+        twitter: updateData.twitter,
+        instagram: updateData.instagram
+      },
+      sub_price: updateData.sub_price,
     })
     .eq("user_id", id)
     .single();
