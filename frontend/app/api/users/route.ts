@@ -42,9 +42,6 @@ export async function POST(req: NextRequest) {
     const eth_wallet_address = formData.get("eth_wallet_address") as string;
     let avatar_url = formData.get("avatar_url") as string;
 
-    // Extract the avatar file
-    const avatarFile = formData.get("avatar") as File | null;
-
     // Validate required fields
     if (!username || !email || !eth_wallet_address) {
       console.log("Validation failed: Missing required fields");
@@ -63,43 +60,6 @@ export async function POST(req: NextRequest) {
 
     if (existingUserByWallet) {
       console.log("User with wallet address already exists");
-
-      if (avatarFile) {
-        console.log("Avatar file provided, processing upload");
-
-        // Convert the file to an ArrayBuffer
-        const arrayBuffer = await avatarFile.arrayBuffer();
-        const buffer = new Uint8Array(arrayBuffer);
-
-        // Generate a unique file name
-        const fileName = `avatars/${uuidv4()}-${avatarFile.name.replace(
-          /\s/g,
-          "_"
-        )}`;
-
-        // Upload the file to Supabase Storage
-        const { data: uploadData, error: uploadError } = await supabase.storage
-          .from("creator-content")
-          .upload(fileName, buffer, {
-            contentType: avatarFile.type,
-            cacheControl: "3600",
-            upsert: false,
-          });
-
-        if (uploadError) {
-          console.log("Failed to upload avatar:", uploadError.message);
-          return NextResponse.json(
-            { error: `Failed to upload avatar: ${uploadError.message}` },
-            { status: 500 }
-          );
-        }
-
-        // Get the public URL
-        avatar_url = supabase.storage
-          .from("creator-content")
-          .getPublicUrl(uploadData.path).data.publicUrl;
-        console.log("Avatar uploaded successfully, URL:", avatar_url);
-      }
 
       const { data, error } = await supabase
         .from("users")
@@ -140,46 +100,6 @@ export async function POST(req: NextRequest) {
           { error: "Username is already taken" },
           { status: 409 }
         );
-      }
-
-      let avatar_url = null;
-
-      // Upload the avatar if provided
-      if (avatarFile) {
-        console.log("Avatar file provided, processing upload");
-
-        // Convert the file to an ArrayBuffer
-        const arrayBuffer = await avatarFile.arrayBuffer();
-        const buffer = new Uint8Array(arrayBuffer);
-
-        // Generate a unique file name
-        const fileName = `avatars/${uuidv4()}-${avatarFile.name.replace(
-          /\s/g,
-          "_"
-        )}`;
-
-        // Upload the file to Supabase Storage
-        const { data: uploadData, error: uploadError } = await supabase.storage
-          .from("creator-content")
-          .upload(fileName, buffer, {
-            contentType: avatarFile.type,
-            cacheControl: "3600",
-            upsert: false,
-          });
-
-        if (uploadError) {
-          console.log("Failed to upload avatar:", uploadError.message);
-          return NextResponse.json(
-            { error: `Failed to upload avatar: ${uploadError.message}` },
-            { status: 500 }
-          );
-        }
-
-        // Get the public URL
-        avatar_url = supabase.storage
-          .from("creator-content")
-          .getPublicUrl(uploadData.path).data.publicUrl;
-        console.log("Avatar uploaded successfully, URL:", avatar_url);
       }
 
       // Create a new user record with the avatar URL

@@ -19,6 +19,7 @@ import { Upload } from "lucide-react";
 import { useDynamicContext } from "@dynamic-labs/sdk-react-core";
 import { useEnvironmentStore } from "./context";
 import { toast } from "sonner";
+import { uploadImageToPinata } from "@/lib/pinata";
 
 export function ProfileCreationModal() {
   const { isProfileModalOpen, setIsProfileModalOpen, setUserProfile } =
@@ -74,7 +75,10 @@ export function ProfileCreationModal() {
 
       // Add avatar file if selected
       if (avatarFile) {
-        userData.append("avatar", avatarFile);
+        const avatar_url = await uploadImageToPinata(avatarFile)
+        userData.append("avatar_url", avatar_url);
+      } else {
+        userData.append('avatar_url', formData.avatar_url)
       }
 
       // Send request to create user endpoint

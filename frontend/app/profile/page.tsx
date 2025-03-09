@@ -22,6 +22,7 @@ import { DynamicWidget } from "@dynamic-labs/sdk-react-core";
 import { useEnvironmentStore } from "@/components/context";
 import { toast } from "sonner";
 import Link from "next/link";
+import { uploadImageToPinata } from "@/lib/pinata";
 
 export default function ProfilePage() {
   const { primaryWallet } = useDynamicContext();
@@ -129,7 +130,8 @@ export default function ProfilePage() {
       userData.append("eth_wallet_address", primaryWallet.address);
 
       if (avatarFile) {
-        userData.append("avatar", avatarFile);
+        let avatar_url = await uploadImageToPinata(avatarFile)
+        userData.append("avatar_url", avatar_url);
       } else {
         userData.append("avatar_url", avatarUrl);
       }

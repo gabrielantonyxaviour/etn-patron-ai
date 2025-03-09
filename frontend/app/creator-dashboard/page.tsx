@@ -477,6 +477,12 @@ export default function CreatorDashboardPage() {
         if (response.ok) {
           const data = await response.json();
           setCreatorProfile(data);
+          setSettingsForm({
+            subPrice: data.sub_price,
+            twitter: data.twitter,
+            instagram: data.instagram,
+            bannerImage: data.banner_url,
+          })
           setIsRegistered(true);
 
           toast.success("Transaction Success", {
