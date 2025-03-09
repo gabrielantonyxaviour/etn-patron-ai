@@ -838,7 +838,7 @@ export default function CreatorDashboardPage() {
           </Dialog>
 
           <Button variant="outline" asChild>
-            <Link href={`/profile/${userProfile?.username}`}>
+            <Link href={`/creator/${creatorProfile.id}`}>
               <Eye className="h-4 w-4 mr-2" />
               View Profile
             </Link>

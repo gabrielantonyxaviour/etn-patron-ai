@@ -59,6 +59,7 @@ export async function POST(req: NextRequest) {
 
   console.log("Input data")
   console.log({
+    id: body.id,
     creator_id: body.creator_id,
     caption: body.caption,
     content_url: body.post_url,
@@ -74,6 +75,7 @@ export async function POST(req: NextRequest) {
   const { data, error } = await supabase
     .from("content")
     .insert({
+      id: body.id,
       creator_id: body.creator_id,
       caption: body.caption,
       type: body.category,
@@ -113,7 +115,6 @@ export async function POST(req: NextRequest) {
     console.error(`Error creating transaction: ${txError.message}`);
     return NextResponse.json({ error: txError.message }, { status: 500 });
   }
-
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });

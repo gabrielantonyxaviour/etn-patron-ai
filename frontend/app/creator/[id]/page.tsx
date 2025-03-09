@@ -27,7 +27,15 @@ import {
   Heart,
   AlertCircle,
   Loader2,
+  CircleDashedIcon,
+  DollarSign,
 } from "lucide-react";
+import { Input } from "@/components/ui";
+import { getRawSubscribe, getRawTipCreator } from "@/lib/tx";
+import { Hex, parseEther } from "viem";
+import { isEthereumWallet } from "@dynamic-labs/ethereum";
+import { electroneum, sepolia } from "viem/chains";
+import { deployments } from "@/lib/constants";
 interface User {
   id: string;
   bio: string;
@@ -83,6 +91,10 @@ export default function CreatorProfilePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isContentLoading, setIsContentLoading] = useState(true);
   const [isSubscribing, setIsSubscribing] = useState(false);
+  const predefinedAmounts = [5, 10, 25, 50];
+  const [tipAmount, setTipAmount] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   const id = typeof params.id === "string" ? params.id : "";
 
@@ -114,6 +126,13 @@ export default function CreatorProfilePage() {
     fetchCreator();
   }, [id]);
 
+  const handleTipAmountChange = (e: any) => {
+    // Only allow numeric input with decimals
+    const value = e.target.value;
+    if (value === '' || /^\d+(\.\d{0,2})?$/.test(value)) {
+      setTipAmount(value);
+    }
+  };
 
   // Check subscription status
   useEffect(() => {
@@ -138,6 +157,10 @@ export default function CreatorProfilePage() {
   }, [primaryWallet?.address, creator?.id]);
 
   const handleSubscribe = async () => {
+
+    if (!primaryWallet || !isEthereumWallet(primaryWallet)) {
+      return;
+    }
     if (!primaryWallet?.address || !creator?.id) {
       toast.error("Please connect your wallet first");
       return;
@@ -146,25 +169,51 @@ export default function CreatorProfilePage() {
     try {
       setIsSubscribing(true);
 
-      // Create transaction
-      const response = await fetch("/api/transactions", {
+
+      toast.info("Subscribing to " + creator.users.full_name, {
+        description: "Initiating Transaction to subscribe.",
+      });
+      const isProduction = JSON.parse(
+        process.env.NEXT_PUBLIC_IS_PRODUCTION || "false"
+      );
+      const data = getRawSubscribe(creator.users.eth_wallet_address as Hex) as Hex;
+      const walletClient = await primaryWallet.getWalletClient();
+      const hash = await walletClient.sendTransaction({
+        to: deployments[isProduction ? electroneum.id : sepolia.id],
+        data: data,
+        value: parseEther(creator.sub_price.toString()),
+      });
+      const response = await fetch("/api/subscriptions", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          sender_wallet: primaryWallet.address,
+          user_id: primaryWallet.address,
           creator_id: creator.id,
           amount: creator.sub_price,
-          transaction_type: "subscription",
-          status: "completed",
+          tx_hash: hash
         }),
       });
+
 
       if (response.ok) {
         setIsSubscribed(true);
         toast.success(
-          `Subscribed to ${creator.users.full_name || creator.users.username}`
+          "Transcation Success", {
+          description: `Subscribed to ${creator.users.full_name || creator.users.username}`,
+          action: {
+            label: "View Tx",
+            onClick: () => {
+              window.open(
+                isProduction
+                  ? "https://blockexplorer.electroneum.com/tx/" + hash
+                  : "https://eth-sepolia.blockscout.com/tx/" + hash,
+                "_blank"
+              );
+            },
+          },
+        }
         );
       } else {
         throw new Error("Subscription failed");
@@ -181,7 +230,7 @@ export default function CreatorProfilePage() {
     return (
       <div className="container mx-auto py-12 px-4">
         <div className="flex flex-col items-center justify-center">
-          <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
+          <CircleDashedIcon className="h-12 w-12 animate-spin text-primary mb-4" />
           <p className="text-lg text-muted-foreground">
             Loading creator profile...
           </p>
@@ -204,6 +253,8 @@ export default function CreatorProfilePage() {
       </div>
     );
   }
+
+
 
   return (
     <div className="container mx-auto py-8 px-4">
@@ -293,9 +344,10 @@ export default function CreatorProfilePage() {
         </div>
 
         <div className="flex flex-col gap-3 flex-shrink-0 mt-4 md:mt-0">
+          {/* Subscription Card */}
           <Card className="w-full md:w-64">
-            <CardContent className="p-4">
-              <div className="text-center">
+            <CardContent className="p-4 h-full">
+              <div className="text-center ">
                 <div className="text-2xl font-bold mb-1">
                   {creator.sub_price} ETN
                 </div>
@@ -323,7 +375,6 @@ export default function CreatorProfilePage() {
               </div>
             </CardContent>
           </Card>
-
 
         </div>
       </div>
@@ -366,7 +417,7 @@ export default function CreatorProfilePage() {
                       <img
                         src={item.content_url}
                         alt={item.caption || "Content image"}
-                        className="w-full h-full object-cover"
+                        className={`w-full h-full object-cover ${item.is_premium && 'filter blur-md'}`}
                       />
                       {item.is_premium && (
                         <div className="absolute top-2 right-2">

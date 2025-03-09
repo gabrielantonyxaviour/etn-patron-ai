@@ -30,6 +30,7 @@ import { deployments } from "@/lib/constants";
 import { Hex, parseEther } from "viem";
 import Image from "next/image";
 import { decrypt } from "@/lib/lit/decrypt";
+import { uuidToUint } from "@/lib/utils";
 
 
 interface Content {
@@ -178,7 +179,7 @@ export default function ContentPage() {
       const isProduction = JSON.parse(
         process.env.NEXT_PUBLIC_IS_PRODUCTION || "false"
       );
-      const data = getRawPurchaseContent(BigInt("1")) as Hex;
+      const data = getRawPurchaseContent(uuidToUint(content.id)) as Hex;
       const walletClient = await primaryWallet.getWalletClient();
       const hash = await walletClient.sendTransaction({
         to: deployments[isProduction ? electroneum.id : sepolia.id],

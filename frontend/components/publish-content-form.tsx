@@ -15,8 +15,9 @@ import { useDynamicContext } from "@dynamic-labs/sdk-react-core";
 import { isEthereumWallet } from "@dynamic-labs/ethereum";
 import { deployments } from "@/lib/constants";
 import { electroneum, sepolia } from "viem/chains";
-import { Hex, parseEther } from "viem";
+import { decodeAbiParameters, Hex, parseEther } from "viem";
 import Image from "next/image";
+import { uintToUuid } from "@/lib/utils";
 
 interface ContentItem {
   id: string;
@@ -131,6 +132,7 @@ export function PublishContentForm({
         formData.isPremium
       ) as Hex;
       const walletClient = await primaryWallet.getWalletClient();
+      const publicClient = await primaryWallet.getPublicClient();
       const hash = await walletClient.sendTransaction({
         to: deployments[isProduction ? electroneum.id : sepolia.id],
         data: data,
@@ -138,8 +140,16 @@ export function PublishContentForm({
       if (hash.length > 0) {
         console.log("Transaction Success");
         console.log(hash);
+        const receipt = await publicClient.waitForTransactionReceipt({
+          hash: hash,
+        })
+        const contentId = decodeAbiParameters(
+          [{ type: 'uint256' }],
+          receipt.logs[0].topics[1] as Hex
+        )[0];
 
         console.log({
+          id: uintToUuid(contentId),
           creator_id: creatorId,
           user_id: userProfile?.id,
           caption: formData.caption,
@@ -156,6 +166,7 @@ export function PublishContentForm({
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
+            id: uintToUuid(contentId),
             creator_id: creatorId,
             user_id: userProfile?.id,
             caption: formData.caption,

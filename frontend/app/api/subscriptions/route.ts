@@ -51,3 +51,46 @@ export async function GET(req: NextRequest) {
 
   return NextResponse.json(data);
 }
+
+
+export async function POST(req: NextRequest) {
+  const body = await req.json();
+
+  if (!body.user_id || !body.amount || !body.tx_hash || !body.creator_id) {
+    return NextResponse.json(
+      { error: "Required fields missing" },
+      { status: 400 }
+    );
+  }
+
+  console.log(body)
+
+  const { data: txData, error: txError } = await supabase.from("transactions").insert({
+    sender_id: body.user_id,
+    recipient_id: body.creator_id,
+    content_id: null,
+    desc: "Subscribe Creator",
+    tx_hash: body.tx_hash,
+    type: "subscription",
+    amount: body.amount
+  })
+  if (txError) {
+    console.log(txError)
+    return NextResponse.json({ error: txError.message }, { status: 500 });
+  }
+
+  const { data, error } = await supabase
+    .from("subscriptions")
+    .insert({
+      user_id: body.user_id,
+      creator_id: body.creator_id,
+      price_paid: body.amount,
+      is_active: true,
+    })
+  if (error) {
+    console.log(error)
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  return NextResponse.json(data);
+}

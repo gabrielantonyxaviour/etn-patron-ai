@@ -27,7 +27,7 @@ export async function GET(
 
   if (creatorError) {
     console.error("Error fetching creator profile:", creatorError);
-    return { error: creatorError };
+    return NextResponse.json({ error: creatorError }, { status: 500 });
   }
 
   // Next, fetch all content posted by this creator
@@ -41,7 +41,7 @@ export async function GET(
 
   if (contentError) {
     console.error("Error fetching creator content:", contentError);
-    return { error: contentError };
+    return NextResponse.json({ error: contentError.message }, { status: 500 });
   }
   console.log(JSON.stringify({
     ...creatorData,

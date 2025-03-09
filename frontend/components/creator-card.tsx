@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle, Users } from "lucide-react";
 import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 interface CreatorCardProps {
   creator: {
@@ -39,10 +40,7 @@ interface CreatorCardProps {
 }
 
 export function CreatorCard({ creator }: CreatorCardProps) {
-
-  useEffect(() => {
-    console.log(creator)
-  }, [])
+  const router = useRouter()
   return (
     <Card className="overflow-hidden hover:shadow-md transition-shadow">
       <CardHeader className="p-0">
@@ -80,9 +78,11 @@ export function CreatorCard({ creator }: CreatorCardProps) {
         </div>
         <div className="flex gap-2 w-full">
           <Button variant="outline" className="w-full" asChild>
-            <Link href={`/profile/${creator.users ? creator.users.username : ""}`}>Profile</Link>
+            <Link href={`/creator/${creator.id}`}>Profile</Link>
           </Button>
-          <Button className="w-full">Subscribe</Button>
+          <Button className="w-full" onClick={() => {
+            router.push(`/creator/${creator.id}`)
+          }}>Subscribe</Button>
         </div>
       </CardFooter>
     </Card>
