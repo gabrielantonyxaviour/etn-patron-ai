@@ -4,20 +4,30 @@ import { supabase } from "@/lib/supabase";
 export async function GET(req: NextRequest) {
   const url = new URL(req.url);
   const creator_id = url.searchParams.get("creator_id");
+  const type = url.searchParams.get("type");
 
   let query = supabase
     .from("content")
     .select("*")
-    .eq("creator_id", creator_id)
-    .order("created_at", { ascending: false })
 
-  const { data, error, count } = await query;
+
+  if (creator_id) {
+    query = query.eq("creator_id", creator_id);
+  }
+
+  if (type) {
+    query = query.eq("type", type);
+  }
+
+
+  const { data, error, count } = await query.order("created_at", { ascending: false });
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-
+  console.log(`Found ${count} posts`);
+  console.log(data);
   return NextResponse.json(data);
 }
 
@@ -37,6 +47,7 @@ export async function POST(req: NextRequest) {
     caption: body.caption,
     content_url: body.post_url,
     is_premium: body.is_premium,
+    type: body.category,
     access_price: body.price,
     content_hash: body.content_hash,
     views_count: 0,
@@ -48,6 +59,7 @@ export async function POST(req: NextRequest) {
     .insert({
       creator_id: body.creator_id,
       caption: body.caption,
+      type: body.category,
       content_url: body.post_url,
       is_premium: body.is_premium,
       access_price: body.price,
@@ -60,7 +72,7 @@ export async function POST(req: NextRequest) {
 
 
   console.log({
-    sender_id: body.sender_id,
+    sender_id: body.user_id,
     recipient_id: null,
     content_id: data.id,
     desc: "Create Post",
@@ -70,7 +82,7 @@ export async function POST(req: NextRequest) {
   })
 
   const { data: txData, error: txError } = await supabase.from("transactions").insert({
-    sender_id: body.sender_id,
+    sender_id: body.user_id,
     recipient_id: null,
     content_id: data.id,
     desc: "Create Post",

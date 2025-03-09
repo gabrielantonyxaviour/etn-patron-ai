@@ -77,15 +77,10 @@ function Explore() {
     async function fetchCreators() {
       try {
         setIsLoading(true);
-        const url = new URL(`${window.location.origin}/api/creators`);
 
-        if (category) {
-          url.searchParams.append("category", category);
-        }
-
-        const response = await fetch(url.toString());
+        const response = await fetch(`/api/creators` + (category ? `?category=${category}` : ""));
         const data = await response.json();
-
+        console.log("FETCH CREATORS", data);
         if (data.creators) {
           setCreators(data.creators);
         }
@@ -104,15 +99,11 @@ function Explore() {
     async function fetchContent() {
       try {
         setIsLoading(true);
-        const url = new URL(`${window.location.origin}/api/content`);
 
-        if (category) {
-          url.searchParams.append("contentType", category);
-        }
-
-        const response = await fetch(url.toString());
+        const response = await fetch("/api/content" + (category ? `?type=${category}` : ""));
         const data = await response.json();
 
+        console.log("FETCH CONTENT", data);
         if (data.content) {
           setContent(data.content);
         }
@@ -130,10 +121,8 @@ function Explore() {
   useEffect(() => {
     async function fetchTrendingContent() {
       try {
-        const url = new URL(`${window.location.origin}/api/content`);
-        url.searchParams.append("limit", "4");
-
-        const response = await fetch(url.toString());
+        setIsTrendingLoading(true);
+        const response = await fetch("/api/content?limit=4");
         const data = await response.json();
 
         if (data.content) {

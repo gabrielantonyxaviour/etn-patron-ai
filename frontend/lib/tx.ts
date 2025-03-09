@@ -5,11 +5,19 @@ import { sepolia } from "viem/chains";
 
 // Convert functions to return raw transaction data
 
-export function getRawRegisterCreator(): string {
+export function getRawRegisterCreator(metadata_url: string): string {
   return encodeFunctionData({
     abi: etnPatronAbi,
     functionName: "registerCreator",
-    args: [],
+    args: [metadata_url],
+  });
+}
+
+export function getRawUpdateCreator(metadata_url: string): string {
+  return encodeFunctionData({
+    abi: etnPatronAbi,
+    functionName: "updateCreator",
+    args: [metadata_url],
   });
 }
 

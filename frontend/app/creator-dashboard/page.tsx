@@ -48,8 +48,8 @@ import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import { useEnvironmentStore } from "@/components/context";
 import { isEthereumWallet } from "@dynamic-labs/ethereum";
-import { uploadImageToPinata } from "@/lib/pinata";
-import { getRawRegisterCreator } from "@/lib/tx";
+import { uploadImageToPinata, uploadJsonToPinata } from "@/lib/pinata";
+import { getRawRegisterCreator, getRawUpdateCreator } from "@/lib/tx";
 import { electroneum, sepolia } from "viem/chains";
 import { deployments } from "@/lib/constants";
 import { Hex } from "viem";
@@ -440,14 +440,26 @@ export default function CreatorDashboardPage() {
       const isProduction = JSON.parse(
         process.env.NEXT_PUBLIC_IS_PRODUCTION || "false"
       );
-      const data = getRawRegisterCreator() as Hex;
+      const banner_url = createProfileForm.bannerImage ? await uploadImageToPinata(createProfileForm.bannerImage) : null;
+      const metadata_url = await uploadJsonToPinata(userProfile?.username || "name", {
+        username: userProfile?.username,
+        name: userProfile?.full_name,
+        user_id: userProfile?.id,
+        image: banner_url,
+        attributes: {
+          category: createProfileForm.category,
+          subscriptionPrice: createProfileForm.subscriptionPrice,
+          twitter: createProfileForm.twitter,
+          instagram: createProfileForm.instagram,
+        },
+      })
+      const data = getRawRegisterCreator(metadata_url.uri) as Hex;
       const walletClient = await primaryWallet.getWalletClient();
       const hash = await walletClient.sendTransaction({
         to: deployments[isProduction ? electroneum.id : sepolia.id],
         data: data,
       });
       if (hash.length > 0) {
-        const banner_url = createProfileForm.bannerImage ? await uploadImageToPinata(createProfileForm.bannerImage) : null;
         const createProfileData = {
           user_id: userProfile?.id,
           sub_price: createProfileForm.subscriptionPrice,
@@ -539,45 +551,74 @@ export default function CreatorDashboardPage() {
   const handleUpdateSettings = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!primaryWallet?.address || !creatorProfile?.id) {
+    if (!primaryWallet || !isEthereumWallet(primaryWallet) || !creatorProfile?.id) {
       toast.error("Creator profile not found");
       return;
     }
 
     try {
       setIsProfileUpdating(true);
-
-      const updateData = {
-        twitter: settingsForm.twitter,
-        instagram: settingsForm.instagram,
-        sub_price: settingsForm.subPrice,
-      };
-
-
-      console.log(updateData)
-
-      // Update creator profile
-      const response = await fetch(
-        `/api/creators/user_id/${userProfile?.id}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(updateData),
-        }
+      const isProduction = JSON.parse(
+        process.env.NEXT_PUBLIC_IS_PRODUCTION || "false"
       );
+      const metadata_url = await uploadJsonToPinata(userProfile?.username || "name", {
+        username: userProfile?.username,
+        name: userProfile?.full_name,
+        user_id: userProfile?.id,
+        image: creatorProfile.banner_url,
+        attributes: {
+          category: creatorProfile.category,
+          subscriptionPrice: settingsForm.subPrice,
+          twitter: settingsForm.twitter,
+          instagram: settingsForm.instagram,
+        },
+      })
+      const data = getRawUpdateCreator(metadata_url.uri) as Hex;
+      const walletClient = await primaryWallet.getWalletClient();
+      const hash = await walletClient.sendTransaction({
+        to: deployments[isProduction ? electroneum.id : sepolia.id],
+        data: data,
+      });
+      if (hash.length > 0) {
+        const updateData = {
+          twitter: settingsForm.twitter,
+          instagram: settingsForm.instagram,
+          sub_price: settingsForm.subPrice,
+          sender_id: userProfile?.id,
+          tx_hash: hash,
+        };
 
-      if (response.ok) {
-        const data = await response.json();
-        setCreatorProfile({
-          ...data,
-        });
+        console.log(updateData)
 
-        toast.success("Your profile has been updated");
+        // Update creator profile
+        const response = await fetch(
+          `/api/creators/user_id/${userProfile?.id}`,
+          {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(updateData),
+          }
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+          setCreatorProfile({
+            ...data,
+          });
+
+          toast.success("Your profile has been updated");
+        } else {
+          throw new Error("Failed to update profile");
+        }
       } else {
-        throw new Error("Failed to update profile");
+        toast.error("Transaction Failed", {
+          description: "Something went wrong, Please Try Again. ",
+        });
+        return;
       }
+
     } catch (error) {
       console.error("Error updating profile:", error);
       toast.error("Failed to update your profile. Please try again.");
@@ -944,7 +985,7 @@ export default function CreatorDashboardPage() {
                           </p>
                         </div>
                         <Button variant="ghost" size="icon" asChild>
-                          <Link href={`/content/edit/${item.id}`}>
+                          <Link href={`/content/${item.id}`}>
                             <ChevronRight className="h-4 w-4" />
                           </Link>
                         </Button>

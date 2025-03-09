@@ -69,21 +69,21 @@ export async function PUT(
 
 
   console.log({
-    sender_id: updateData.senderId,
+    sender_id: updateData.sender_id,
     recipient_id: null,
     content_id: null,
     desc: "Update Profile",
-    tx_hash: updateData.txHash,
+    tx_hash: updateData.tx_hash,
     type: "update_profile",
     amount: 0
   })
 
   const { data: txData, error: txError } = await supabase.from("transactions").insert({
-    sender_id: updateData.senderId,
+    sender_id: updateData.sender_id,
     recipient_id: null,
     content_id: null,
     desc: "Update Profile",
-    tx_hash: updateData.txHash,
+    tx_hash: updateData.tx_hash,
     type: "update_profile",
     amount: 0
   })

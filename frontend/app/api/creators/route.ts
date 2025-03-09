@@ -10,12 +10,15 @@ export async function GET(req: NextRequest) {
 
   let query = supabase
     .from("creator_profiles")
-    .select(
-      `
-      *,
-      users!creator_profiles_user_id_fkey(username, avatar_url)
-    `
-    )
+    .select(` *,
+      users:user_id (
+        id,
+        username,
+        email,
+        full_name,
+        avatar_url,
+        bio,
+        eth_wallet_address`)
     .order("created_at", { ascending: false })
     .range(offset, offset + limit - 1);
 

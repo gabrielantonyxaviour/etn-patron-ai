@@ -48,6 +48,7 @@ export function PublishContentForm({
 }: PublishContentFormProps) {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const { primaryWallet } = useDynamicContext();
+  const { userProfile } = useEnvironmentStore((store) => store)
 
   const [formData, setFormData] = useState<FormState>({
     caption: "",
@@ -142,6 +143,7 @@ export function PublishContentForm({
 
         console.log({
           creator_id: creatorId,
+          user_id: userProfile?.id,
           caption: formData.caption,
           post_url: imageUrl,
           category: formData.category,
@@ -156,6 +158,7 @@ export function PublishContentForm({
           },
           body: JSON.stringify({
             creator_id: creatorId,
+            user_id: userProfile?.id,
             caption: formData.caption,
             post_url: imageUrl,
             category: formData.category,

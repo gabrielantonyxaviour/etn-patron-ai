@@ -112,7 +112,6 @@ export async function POST(req: NextRequest) {
           bio: bio || null,
           eth_wallet_address,
           avatar_url,
-          is_creator: false, // Default value
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         })

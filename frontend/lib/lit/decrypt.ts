@@ -7,6 +7,7 @@ import {
   LitAccessControlConditionResource,
 } from "@lit-protocol/auth-helpers";
 import { providers } from "ethers";
+import { verifyDeployment } from "../constants";
 
 export async function decrypt(
   signer: providers.JsonRpcSigner,
@@ -26,7 +27,7 @@ export async function decrypt(
 
   const evmContractConditions = [
     {
-      contractAddress: "0x9387322F5342e36615Aae2e6E85FdE695d0D4dfc",
+      contractAddress: verifyDeployment,
       chain: "sepolia",
       functionName: "canDecryptContent",
       functionParams: [":userAddress", "1"],
