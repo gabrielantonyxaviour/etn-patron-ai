@@ -120,6 +120,18 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  console.log("Input data")
+  console.log({
+    creator_id: body.creator_id,
+    caption: body.caption,
+    content_url: body.post_url,
+    is_premium: body.is_premium,
+    access_price: body.price,
+    content_hash: body.content_hash,
+    views_count: 0,
+    likes_count: 0
+  })
+
   const { data, error } = await supabase
     .from("content")
     .insert({

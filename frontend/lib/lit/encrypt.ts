@@ -1,6 +1,8 @@
 import { LitNodeClient } from "@lit-protocol/lit-node-client";
 import { LIT_NETWORK } from "@lit-protocol/constants";
 import { encryptString } from "@lit-protocol/encryption";
+import { deployments, verifyDeployment } from "../constants";
+import { electroneum, sepolia } from "viem/chains";
 
 export async function encrypt(dataToEncrypt: string): Promise<{
   ciphertext: string;
@@ -16,7 +18,7 @@ export async function encrypt(dataToEncrypt: string): Promise<{
 
   const evmContractConditions = [
     {
-      contractAddress: "0x9387322F5342e36615Aae2e6E85FdE695d0D4dfc",
+      contractAddress: verifyDeployment,
       chain: "sepolia",
       functionName: "canDecryptContent",
       functionParams: [":userAddress", "1"],

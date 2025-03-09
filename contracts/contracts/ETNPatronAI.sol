@@ -14,6 +14,7 @@ contract ETNPatronAI {
     struct Creator {
         address payable walletAddress;
         bool isVerified;
+        string metadata;
         uint256 totalEarned;
         uint256 subscriberCount;
         uint256 creatorId;
@@ -27,6 +28,7 @@ contract ETNPatronAI {
         bool isPremium;
         uint256 tipTotal;
         uint256 purchaseCount;
+        bytes32 contentHash;
     }
 
     struct Subscription {
@@ -43,11 +45,17 @@ contract ETNPatronAI {
     mapping(address => mapping(uint256 => bool)) public purchasedContent;
     mapping(address => uint256) public platformBalance;
 
-    event CreatorRegistered(address indexed creatorAddress, uint256 creatorId);
+    event CreatorRegistered(
+        address indexed creatorAddress,
+        uint256 creatorId,
+        string metadata
+    );
+    event CreatorUpdated(uint256 creatorId, string metadata);
     event ContentPublished(
         uint256 indexed contentId,
         string indexed content,
         address indexed creatorAddress,
+        bytes32 contentHash,
         uint256 price,
         bool isPremium
     );
@@ -95,7 +103,7 @@ contract ETNPatronAI {
         _;
     }
 
-    function registerCreator() external {
+    function registerCreator(string memory _metadata) external {
         require(
             creators[msg.sender].walletAddress == address(0),
             "Creator already registered"
@@ -105,12 +113,18 @@ contract ETNPatronAI {
         creators[msg.sender] = Creator({
             walletAddress: payable(msg.sender),
             isVerified: false,
+            metadata: _metadata,
             totalEarned: 0,
             subscriberCount: 0,
             creatorId: newCreatorId
         });
 
-        emit CreatorRegistered(msg.sender, newCreatorId);
+        emit CreatorRegistered(msg.sender, newCreatorId, _metadata);
+    }
+
+    function updateCreator(string memory _metadata) external onlyCreator {
+        creators[msg.sender].metadata = _metadata;
+        emit CreatorUpdated(creators[msg.sender].creatorId, _metadata);
     }
 
     function verifyCreator(address _creatorAddress) external onlyOwner {
@@ -127,9 +141,11 @@ contract ETNPatronAI {
         bool _isPremium
     ) external onlyCreator {
         uint256 newContentId = contentIdCounter++;
+        bytes32 contentHash = keccak256(abi.encodePacked(content));
         contents[newContentId] = Content({
             contentId: newContentId,
             content: content,
+            contentHash: contentHash,
             creatorAddress: msg.sender,
             price: _price,
             isPremium: _isPremium,
@@ -141,6 +157,7 @@ contract ETNPatronAI {
             newContentId,
             content,
             msg.sender,
+            contentHash,
             _price,
             _isPremium
         );
