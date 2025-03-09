@@ -430,7 +430,7 @@ export default function ProfilePage() {
                       </CardHeader>
                       <CardContent>
                         <div className="text-2xl font-bold">
-                          {balance} ETN
+                          {parseFloat(balance).toFixed(2)} ETN
                         </div>
                         <p className="text-xs text-muted-foreground mt-1">
                           ≈ ${balanceInUSD} USD
