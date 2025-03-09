@@ -39,6 +39,7 @@ async function main() {
     process.env.PRIVATE_KEY || "", // Replace with your private key
     new ethers.providers.JsonRpcProvider(LIT_RPC.CHRONICLE_YELLOWSTONE)
   );
+
   const evmContractConditions = [
     {
       contractAddress: "0x9387322F5342e36615Aae2e6E85FdE695d0D4dfc",

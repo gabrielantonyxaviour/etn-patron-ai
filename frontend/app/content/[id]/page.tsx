@@ -20,34 +20,45 @@ import {
   ThumbsUp,
   Send,
   AlertCircle,
+  CheckCircle,
 } from "lucide-react";
+import { useEnvironmentStore } from "@/components/context";
+import { getRawPurchaseContent } from "@/lib/tx";
+import { isEthereumWallet } from "@dynamic-labs/ethereum";
+import { electroneum, sepolia } from "viem/chains";
+import { deployments } from "@/lib/constants";
+import { Hex, parseEther } from "viem";
+import Image from "next/image";
+import { decrypt } from "@/lib/lit/decrypt";
 
-interface ContentItem {
+
+interface Content {
   id: string;
   caption: string;
+  created_at: string;
+  creator: {
+    id: string;
+    verified: boolean;
+    user: {
+      id: string;
+      full_name: string;
+      avatar_url: string;
+      username: string;
+    }
+  };
+  cipher_text: string;
+  content_hash: string;
   content_url: string;
+  type: string;
+  access_price: string;
   is_premium: boolean;
-  is_accessible: boolean;
-  access_price: number;
   views_count: number;
   likes_count: number;
-  created_at: string;
-  creator_profiles: {
-    id: string;
-    user_id: string;
-    category: string;
-    verified: boolean;
-    users: {
-      username: string;
-      avatar_url: string;
-      full_name: string;
-    };
-  };
 }
 
 interface Comment {
   id: string;
-  comment_text: string;
+  comment: string;
   created_at: string;
   likes_count: number;
   user: {
@@ -60,15 +71,18 @@ export default function ContentPage() {
   const params = useParams();
   const router = useRouter();
   const { primaryWallet } = useDynamicContext();
+  const { userProfile } = useEnvironmentStore((store) => store)
 
-  const [content, setContent] = useState<ContentItem | null>(null);
+  const [content, setContent] = useState<Content | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
   const [isLiked, setIsLiked] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isPurchasing, setIsPurchasing] = useState(false);
   const [newComment, setNewComment] = useState("");
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
-
+  const [isPurchased, setIsPurchased] = useState(false);
+  const [isSubscribed, setIsSubscribed] = useState(false);
+  const [isDecrypted, setIsDecrypted] = useState(false);
   const contentId = typeof params.id === "string" ? params.id : "";
 
   // Fetch content
@@ -78,16 +92,16 @@ export default function ContentPage() {
 
       try {
         setIsLoading(true);
-        const walletParam = primaryWallet?.address
-          ? `&wallet=${primaryWallet.address}`
-          : "";
+
         const response = await fetch(
-          `/api/content/${contentId}?${walletParam}`
+          `/api/content/${contentId}?user_id=${userProfile?.id}`
         );
 
         if (response.ok) {
           const data = await response.json();
-          setContent(data);
+          setContent(data.content);
+          setIsPurchased(data.isPurchased)
+          setIsSubscribed(data.isSubscribed)
         } else {
           toast.error("Content not found");
           router.push("/explore");
@@ -101,7 +115,7 @@ export default function ContentPage() {
     };
 
     fetchContent();
-  }, [contentId, primaryWallet?.address, router]);
+  }, [contentId, userProfile]);
 
   // Fetch comments
   useEffect(() => {
@@ -109,11 +123,11 @@ export default function ContentPage() {
       if (!contentId) return;
 
       try {
-        const response = await fetch(`/api/comments?contentId=${contentId}`);
+        const response = await fetch(`/api/comments?content_id=${contentId}`);
 
         if (response.ok) {
           const data = await response.json();
-          setComments(data.comments || []);
+          setComments(data || []);
         }
       } catch (error) {
         console.error("Error fetching comments:", error);
@@ -123,14 +137,14 @@ export default function ContentPage() {
     fetchComments();
   }, [contentId]);
 
-  // Check if user has liked the content
+  // // Check if user has liked the content
   useEffect(() => {
     const checkLikeStatus = async () => {
-      if (!contentId || !primaryWallet?.address) return;
+      if (!contentId || !userProfile) return;
 
       try {
         const response = await fetch(
-          `/api/likes?contentId=${contentId}&wallet=${primaryWallet.address}`
+          `/api/likes?content_id=${contentId}&user_id=${userProfile?.id}`
         );
 
         if (response.ok) {
@@ -146,6 +160,10 @@ export default function ContentPage() {
   }, [contentId, primaryWallet?.address]);
 
   const handlePurchaseContent = async () => {
+
+    if (!primaryWallet || !isEthereumWallet(primaryWallet)) {
+      return;
+    }
     if (!primaryWallet?.address || !content) {
       toast.error("Please connect your wallet first");
       return;
@@ -154,25 +172,51 @@ export default function ContentPage() {
     try {
       setIsPurchasing(true);
 
+      toast.info("Purchasing Content", {
+        description: "Initiating Transaction to purchase the content.",
+      });
+      const isProduction = JSON.parse(
+        process.env.NEXT_PUBLIC_IS_PRODUCTION || "false"
+      );
+      const data = getRawPurchaseContent(BigInt("1")) as Hex;
+      const walletClient = await primaryWallet.getWalletClient();
+      const hash = await walletClient.sendTransaction({
+        to: deployments[isProduction ? electroneum.id : sepolia.id],
+        data: data,
+        value: parseEther(content.access_price ? content.access_price.toString() : "0"),
+      });
       // Create transaction
-      const response = await fetch("/api/transactions", {
+      const response = await fetch("/api/purchase", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          sender_wallet: primaryWallet.address,
+          user_id: userProfile?.id,
           content_id: content.id,
-          recipient_id: content.creator_profiles.id,
           amount: content.access_price,
-          transaction_type: "content_purchase",
-          status: "completed",
+          tx_hash: hash,
+          creator_id: content.creator.id,
         }),
       });
 
       if (response.ok) {
         setContent((prev) => (prev ? { ...prev, is_accessible: true } : null));
-        toast.success("Content purchased successfully");
+        toast.success("Transaction Success", {
+          description: "Content is Purchased Successfully.",
+          action: {
+            label: "View Tx",
+            onClick: () => {
+              window.open(
+                isProduction
+                  ? "https://blockexplorer.electroneum.com/tx/" + hash
+                  : "https://eth-sepolia.blockscout.com/tx/" + hash,
+                "_blank"
+              );
+            },
+          },
+        });
+        setIsPurchased(true);
       } else {
         throw new Error("Purchase failed");
       }
@@ -184,8 +228,36 @@ export default function ContentPage() {
     }
   };
 
-  const handleToggleLike = async () => {
+  const handleDecryption = async () => {
+
+    if (!primaryWallet || !isEthereumWallet(primaryWallet)) {
+      return;
+    }
     if (!primaryWallet?.address || !content) {
+      toast.error("Please connect your wallet first");
+      return;
+    }
+
+    try {
+      setIsPurchasing(true);
+      toast.info("Decrypting Content", {
+        description: "Verifying ownership of the content via Lit Nodes.",
+      });
+      await decrypt(content.cipher_text, content.content_hash)
+      toast.success("Decryption Success", {
+        description: "Successfully decrypted the exclusive content.",
+      });
+      setIsDecrypted(true);
+    } catch (error) {
+      console.error("Error purchasing content:", error);
+      toast.error("Failed to purchase content. Please try again.");
+    } finally {
+      setIsPurchasing(false);
+    }
+  };
+
+  const handleToggleLike = async () => {
+    if (!userProfile || !content) {
       toast.error("Please connect your wallet first");
       return;
     }
@@ -197,7 +269,7 @@ export default function ContentPage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          wallet: primaryWallet.address,
+          user_id: userProfile?.id,
           content_id: content.id,
         }),
       });
@@ -226,7 +298,7 @@ export default function ContentPage() {
   const handleSubmitComment = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!primaryWallet?.address || !content || !newComment.trim()) {
+    if (!userProfile || !content || !newComment.trim()) {
       toast.error("Please connect your wallet and write a comment");
       return;
     }
@@ -240,9 +312,9 @@ export default function ContentPage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          wallet: primaryWallet.address,
+          user_id: userProfile?.id,
           content_id: content.id,
-          comment_text: newComment,
+          comment: newComment,
         }),
       });
 
@@ -300,18 +372,20 @@ export default function ContentPage() {
     <div className="container max-w-4xl mx-auto py-8 px-4">
       {/* Image Content */}
       <div className="mb-8 rounded-lg overflow-hidden border bg-card">
-        {content.is_premium && !content.is_accessible ? (
+        {content.is_premium && (!isPurchased || !isDecrypted) ? (
           <div className="relative">
             <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center p-4 z-10">
               <Lock className="h-12 w-12 text-white mb-4" />
               <h3 className="text-xl font-bold text-white mb-2">
                 Premium Content
               </h3>
-              <p className="text-white/80 text-center mb-4">
+              {isPurchased ? <p className="text-white/80 text-center mb-4">
+                You own this encrypted content.
+              </p> : <p className="text-white/80 text-center mb-4">
                 Unlock this content for {content.access_price} ETN
-              </p>
+              </p>}
 
-              {primaryWallet ? (
+              {primaryWallet ? !isPurchased ? (
                 <Button
                   onClick={handlePurchaseContent}
                   disabled={isPurchasing}
@@ -321,7 +395,15 @@ export default function ContentPage() {
                     ? "Processing..."
                     : `Purchase (${content.access_price} ETN)`}
                 </Button>
-              ) : (
+              ) : <Button
+                onClick={handleDecryption}
+                disabled={isPurchasing}
+                className="min-w-32"
+              >
+                {isPurchasing
+                  ? <p>Processing...</p>
+                  : <div className="flex space-x-2 items-center"><Image src={'/lit.jpeg'} className="rounded-full" width={25} height={25} alt="lit" /><p>Decrypt with Lit</p></div>}
+              </Button> : (
                 <DynamicWidget />
               )}
             </div>
@@ -349,17 +431,17 @@ export default function ContentPage() {
       <div className="mb-8">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <Link href={`/creator/${content.creator_profiles.user_id}`}>
+            <Link href={`/creator/${content.creator.id}`}>
               <Avatar className="h-10 w-10">
                 <AvatarImage
                   src={
-                    content.creator_profiles.users.avatar_url ||
+                    content.creator.user.avatar_url ||
                     "/placeholder-avatar.png"
                   }
-                  alt={content.creator_profiles.users.username}
+                  alt={content.creator.user.username}
                 />
                 <AvatarFallback>
-                  {content.creator_profiles.users.username
+                  {content.creator.user.username
                     .substring(0, 2)
                     .toUpperCase()}
                 </AvatarFallback>
@@ -369,20 +451,15 @@ export default function ContentPage() {
             <div>
               <div className="flex items-center">
                 <Link
-                  href={`/creator/${content.creator_profiles.user_id}`}
+                  href={`/creator/${content.creator.user.id}`}
                   className="font-medium hover:underline"
                 >
-                  {content.creator_profiles.users.full_name ||
-                    content.creator_profiles.users.username}
+                  {content.creator.user.full_name ||
+                    content.creator.user.username}
                 </Link>
 
-                {content.creator_profiles.verified && (
-                  <Badge
-                    className="ml-2 bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300"
-                    variant="outline"
-                  >
-                    Verified
-                  </Badge>
+                {!content.creator.verified && (
+                  <CheckCircle className="h-4 w-4 ml-1 fill-blue-500 text-white" />
                 )}
               </div>
 
@@ -434,10 +511,9 @@ export default function ContentPage() {
               <ThumbsUp className="h-4 w-4 mr-1" />
               <span>{content.likes_count} likes</span>
             </div>
-
             <div>
               <Badge variant="outline">
-                {content.creator_profiles.category || "Art"}
+                {content.type || "Art"}
               </Badge>
             </div>
           </div>
@@ -489,7 +565,7 @@ export default function ContentPage() {
           {comments.length > 0 ? (
             comments.map((comment) => (
               <Card key={comment.id}>
-                <CardContent className="pt-6">
+                <CardContent className="pt-6 pb-1">
                   <div className="flex items-start space-x-4">
                     <Avatar className="h-8 w-8">
                       <AvatarImage
@@ -515,12 +591,12 @@ export default function ContentPage() {
                       </div>
 
                       <p className="mt-1 whitespace-pre-line">
-                        {comment.comment_text}
+                        {comment.comment}
                       </p>
                     </div>
                   </div>
                 </CardContent>
-                <CardFooter className="py-2">
+                <CardFooter className="pb-2 pt-0">
                   <Button variant="ghost" size="sm" className="text-xs">
                     <ThumbsUp className="h-3 w-3 mr-1" />
                     {comment.likes_count > 0 ? comment.likes_count : "Like"}

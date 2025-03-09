@@ -26,7 +26,7 @@ interface Creator {
   sub_price: number;
   updated_at: string;
   created_at: string;
-  user: {
+  users: {
     id: string;
     eth_wallet_address: string;
     bio: string;
@@ -163,8 +163,8 @@ function Explore() {
   // Filter creators/content based on search query
   const filteredCreators = creators.filter(
     (creator) =>
-      creator.user.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      creator.user.username
+      creator.users.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      creator.users.username
         .toLowerCase()
         .includes(searchQuery.toLowerCase()) ||
       creator.category.toLowerCase().includes(searchQuery.toLowerCase())

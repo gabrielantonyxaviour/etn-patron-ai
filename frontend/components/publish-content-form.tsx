@@ -15,7 +15,7 @@ import { useDynamicContext } from "@dynamic-labs/sdk-react-core";
 import { isEthereumWallet } from "@dynamic-labs/ethereum";
 import { deployments } from "@/lib/constants";
 import { electroneum, sepolia } from "viem/chains";
-import { Hex } from "viem";
+import { Hex, parseEther } from "viem";
 import Image from "next/image";
 
 interface ContentItem {
@@ -112,7 +112,6 @@ export function PublishContentForm({
 
       let modifiedContent: string = "";
       let dataHash: string = "";
-
       if (formData.isPremium) {
         console.log("Encrypting content for premium post...");
         const { ciphertext, dataToEncryptHash } = await encrypt(imageUrl);
@@ -120,16 +119,15 @@ export function PublishContentForm({
         modifiedContent = ciphertext;
         console.log("Content encrypted:", ciphertext);
         console.log("Data hash:", dataToEncryptHash);
-      } else {
-        modifiedContent = imageUrl;
+
+        toast.success("Encryption Complete", {
+          description: "Waiting to send a transaction to store the post on-chain",
+        });
       }
 
-      toast.info("Encryption Complete", {
-        description: "Waiting to send a transaction to store the post on-chain",
-      });
       const data = getRawPublishContent(
         modifiedContent,
-        BigInt(parseFloat(formData.price)),
+        parseEther(formData.isPremium ? formData.price : "0"),
         formData.isPremium
       ) as Hex;
       const walletClient = await primaryWallet.getWalletClient();
@@ -148,8 +146,9 @@ export function PublishContentForm({
           post_url: imageUrl,
           category: formData.category,
           is_premium: formData.isPremium,
-          price: formData.price,
+          price: formData.isPremium ? formData.price : "0",
           content_hash: dataHash,
+          cipher_text: modifiedContent
         })
         const response = await fetch("/api/content", {
           method: "POST",
@@ -163,8 +162,9 @@ export function PublishContentForm({
             post_url: imageUrl,
             category: formData.category,
             is_premium: formData.isPremium,
-            price: formData.price,
+            price: formData.isPremium ? formData.price : "0",
             content_hash: dataHash,
+            cipher_text: modifiedContent
           }),
         });
 

@@ -130,7 +130,7 @@ export default function ProfilePage() {
       userData.append("eth_wallet_address", primaryWallet.address);
 
       if (avatarFile) {
-        let avatar_url = await uploadImageToPinata(avatarFile)
+        const avatar_url = await uploadImageToPinata(avatarFile)
         userData.append("avatar_url", avatar_url);
       } else {
         userData.append("avatar_url", avatarUrl);

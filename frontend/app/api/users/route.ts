@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
     const email = formData.get("email") as string;
     const bio = formData.get("bio") as string;
     const eth_wallet_address = formData.get("eth_wallet_address") as string;
-    let avatar_url = formData.get("avatar_url") as string;
+    const avatar_url = formData.get("avatar_url") as string;
 
     // Validate required fields
     if (!username || !email || !eth_wallet_address) {
