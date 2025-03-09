@@ -16,9 +16,23 @@ import { isEthereumWallet } from "@dynamic-labs/ethereum";
 import { deployments } from "@/lib/constants";
 import { electroneum, sepolia } from "viem/chains";
 import { Hex } from "viem";
+import Image from "next/image";
 
+interface ContentItem {
+  id: string;
+  creator_id: string;
+  caption: string;
+  is_premium: boolean;
+  access_price: number;
+  views_count: number;
+  likes_count: number;
+  content_hash: string;
+  created_at: string;
+  content_url: string;
+}
 interface PublishContentFormProps {
   creatorId: string;
+  addContent: (content: ContentItem) => void;
 }
 
 interface FormState {
@@ -30,7 +44,7 @@ interface FormState {
 }
 
 export function PublishContentForm({
-  creatorId,
+  creatorId, addContent
 }: PublishContentFormProps) {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const { primaryWallet } = useDynamicContext();
@@ -127,11 +141,11 @@ export function PublishContentForm({
         console.log(hash);
 
         console.log({
-          id: creatorId,
+          creator_id: creatorId,
           caption: formData.caption,
           post_url: imageUrl,
           category: formData.category,
-          isPremium: formData.isPremium,
+          is_premium: formData.isPremium,
           price: formData.price,
           content_hash: dataHash,
         })
@@ -153,6 +167,7 @@ export function PublishContentForm({
 
         if (!response.ok) {
           throw new Error("Failed to publish content");
+
         }
 
         // Reset form
@@ -163,6 +178,8 @@ export function PublishContentForm({
           category: "",
           price: "0.00",
         });
+        const contentData = await response.json()
+        addContent(contentData)
         toast.success("Transaction Success", {
           description: "Your post is posted on the Electroneum Blockchain.",
           action: {
@@ -233,6 +250,15 @@ export function PublishContentForm({
 
           <div className="space-y-2">
             <Label>Content File</Label>
+            {formData.contentFile && (
+              <Image
+                className="mb-4 mx-auto rounded-md"
+                src={URL.createObjectURL(formData.contentFile)}
+                alt="Uploaded content"
+                width={200}
+                height={200}
+              />
+            )}
             <div className="border-2 border-dashed rounded-md p-6 flex flex-col items-center justify-center">
               <Upload className="h-8 w-8 text-muted-foreground mb-2" />
               <p className="text-sm text-muted-foreground mb-2">

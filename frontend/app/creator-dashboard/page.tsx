@@ -73,14 +73,13 @@ interface CreatorProfile {
 
 interface ContentItem {
   id: string;
-  title: string;
-  description: string;
-  thumbnail_url: string;
-  content_type: string;
+  creator_id: string;
+  caption: string;
   is_premium: boolean;
   access_price: number;
   views_count: number;
   likes_count: number;
+  content_hash: string;
   created_at: string;
   content_url: string;
 }
@@ -234,12 +233,14 @@ export default function CreatorDashboardPage() {
       if (!creatorProfile?.id) return;
       try {
         const response = await fetch(
-          `/api/content?creatorId=${creatorProfile.id}`
+          `/api/content?creator_id=${creatorProfile.id}`
         );
 
         if (response.ok) {
           const data = await response.json();
-          setContent(data.content || []);
+          console.log('Creator contnet')
+          console.log(data)
+          setContent(data || []);
         }
       } catch (error) {
         console.error("Error fetching content:", error);
@@ -799,6 +800,9 @@ export default function CreatorDashboardPage() {
 
               <PublishContentForm
                 creatorId={creatorProfile?.id}
+                addContent={() => {
+
+                }}
               />
             </DialogContent>
           </Dialog>
@@ -890,7 +894,9 @@ export default function CreatorDashboardPage() {
                       </DialogHeader>
 
                       <PublishContentForm
-                        creatorId={creatorProfile?.id}
+                        creatorId={creatorProfile?.id} addContent={(createdContent: ContentItem) => {
+                          setContent([...content, createdContent])
+                        }}
                       />
                     </DialogContent>
                   </Dialog>
@@ -906,44 +912,20 @@ export default function CreatorDashboardPage() {
                         <div className="w-16 h-16 bg-gray-200 rounded overflow-hidden">
                           <img
                             src={
-                              item.thumbnail_url || "/content/placeholder.jpg"
+                              item.content_url || "/content/placeholder.jpg"
                             }
-                            alt={item.title}
+                            alt={item.caption}
                             className="w-full h-full object-cover"
                           />
                         </div>
                         <div>
                           <div className="flex items-center gap-2">
-                            <h3 className="font-medium">{item.title}</h3>
+                            <h3 className="font-medium">{item.caption}</h3>
                             <Badge variant="secondary">
                               {item.is_premium ? "Premium" : "Free"}
                             </Badge>
                           </div>
                         </div>
-                      </div>
-                      <div className="flex items-center gap-6">
-                        <div className="text-right">
-                          <p className="text-sm font-medium">Views</p>
-                          <p className="text-muted-foreground">
-                            {item.views_count}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-sm font-medium">Earnings</p>
-                          <p className="text-muted-foreground">
-                            {(item.is_premium
-                              ? item.access_price *
-                              Math.floor(item.views_count / 3)
-                              : 0
-                            ).toFixed(2)}{" "}
-                            ETN
-                          </p>
-                        </div>
-                        <Button variant="ghost" size="icon" asChild>
-                          <Link href={`/content/edit/${item.id}`}>
-                            <ChevronRight className="h-4 w-4" />
-                          </Link>
-                        </Button>
                       </div>
                       <div className="flex items-center gap-2 mt-1">
                         <span className="text-sm text-muted-foreground">
@@ -951,7 +933,7 @@ export default function CreatorDashboardPage() {
                           {formatDistanceToNow(new Date(item.created_at))} ago
                         </span>
                         <Badge variant="outline" className="text-xs">
-                          {item.content_type}
+                          {creatorProfile.category}
                         </Badge>
                       </div>
                       <div className="flex items-center gap-6">
