@@ -24,64 +24,77 @@ import {
   Calendar,
   Twitter,
   Instagram,
-  Globe,
   Heart,
   AlertCircle,
   Loader2,
 } from "lucide-react";
-
-interface CreatorProfile {
+interface User {
   id: string;
-  category: string;
-  sub_price: number;
-  banner_url?: string;
-  verified: boolean;
-  created_at: string;
-  social_links?: {
-    twitter?: string;
-    instagram?: string;
-    website?: string;
-  };
-  users: {
-    id: string;
-    username: string;
-    avatar_url?: string;
-    full_name?: string;
-    bio?: string;
-  };
+  bio: string;
+  email: string;
+  username: string;
+  full_name: string;
+  avatar_url: string;
+  last_login: string;
+  eth_wallet_address: string;
 }
 
-interface ContentItem {
+interface Content {
   id: string;
+  created_at: string;
+  creator_id: string;
   caption: string;
   content_url: string;
   is_premium: boolean;
   access_price: number;
   views_count: number;
   likes_count: number;
+  content_hash: string;
+  type: string;
+  cipher_text: string;
+}
+
+interface SocialLinks {
+  twitter?: string;
+  instagram?: string;
+  [key: string]: string | undefined;  // For any additional social links
+}
+
+interface CreatorWithContent {
+  id: string;
   created_at: string;
+  user_id: string;
+  category: string;
+  sub_price: number;
+  banner_url: string;
+  social_links: SocialLinks;
+  verified: boolean;
+  updated_at: string;
+  users: User;
+  subscriber_count: number;
+  content: Content[];
 }
 
 export default function CreatorProfilePage() {
   const params = useParams();
   const { primaryWallet } = useDynamicContext();
-  const [creator, setCreator] = useState<CreatorProfile | null>(null);
-  const [content, setContent] = useState<ContentItem[]>([]);
+  const [creator, setCreator] = useState<CreatorWithContent | null>(null);
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isContentLoading, setIsContentLoading] = useState(true);
   const [isSubscribing, setIsSubscribing] = useState(false);
 
-  const address = typeof params.address === "string" ? params.address : "";
+  const id = typeof params.id === "string" ? params.id : "";
 
   // Fetch creator profile
   useEffect(() => {
     const fetchCreator = async () => {
-      if (!address) return;
+
+      if (!id) return;
 
       try {
         setIsLoading(true);
-        const response = await fetch(`/api/creators/${address}`);
+        const response = await fetch(`/api/creators/${id}`);
 
         if (response.ok) {
           const data = await response.json();
@@ -94,34 +107,13 @@ export default function CreatorProfilePage() {
         toast.error("Failed to load creator profile");
       } finally {
         setIsLoading(false);
+        setIsContentLoading(false)
       }
     };
 
     fetchCreator();
-  }, [address]);
+  }, [id]);
 
-  // Fetch creator content
-  useEffect(() => {
-    const fetchContent = async () => {
-      if (!creator?.id) return;
-
-      try {
-        setIsContentLoading(true);
-        const response = await fetch(`/api/content?creatorId=${creator.id}`);
-
-        if (response.ok) {
-          const data = await response.json();
-          setContent(data.content || []);
-        }
-      } catch (error) {
-        console.error("Error fetching content:", error);
-      } finally {
-        setIsContentLoading(false);
-      }
-    };
-
-    fetchContent();
-  }, [creator?.id]);
 
   // Check subscription status
   useEffect(() => {
@@ -262,7 +254,7 @@ export default function CreatorProfilePage() {
           <div className="flex items-center gap-4 text-sm text-muted-foreground">
             <div className="flex items-center gap-1">
               <Users className="h-4 w-4" />
-              <span>251 Subscribers</span>
+              <span>{creator.subscriber_count} Subscribers</span>
             </div>
             <div className="flex items-center gap-1">
               <Calendar className="h-4 w-4" />
@@ -294,17 +286,6 @@ export default function CreatorProfilePage() {
                   rel="noopener noreferrer"
                 >
                   <Instagram className="h-5 w-5" />
-                </a>
-              </Button>
-            )}
-            {creator.social_links?.website && (
-              <Button variant="ghost" size="icon" asChild title="Website">
-                <a
-                  href={creator.social_links.website}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <Globe className="h-5 w-5" />
                 </a>
               </Button>
             )}
@@ -343,10 +324,7 @@ export default function CreatorProfilePage() {
             </CardContent>
           </Card>
 
-          <Button variant="outline" className="flex-1">
-            <Heart className="h-4 w-4 mr-2" />
-            Follow
-          </Button>
+
         </div>
       </div>
 
@@ -372,7 +350,7 @@ export default function CreatorProfilePage() {
                 </div>
               ))}
             </div>
-          ) : content.length === 0 ? (
+          ) : creator.content.length === 0 ? (
             <div className="text-center py-16">
               <h2 className="text-xl font-medium mb-2">No content yet</h2>
               <p className="text-muted-foreground">
@@ -381,7 +359,7 @@ export default function CreatorProfilePage() {
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {content.map((item) => (
+              {creator.content.map((item) => (
                 <Link href={`/content/${item.id}`} key={item.id}>
                   <Card className="overflow-hidden hover:shadow-md transition-shadow h-full flex flex-col">
                     <div className="aspect-square relative">
@@ -446,7 +424,7 @@ export default function CreatorProfilePage() {
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {content
+              {creator.content
                 .filter((item) => item.is_premium)
                 .map((item) => (
                   <Link href={`/content/${item.id}`} key={item.id}>
@@ -497,7 +475,7 @@ export default function CreatorProfilePage() {
           )}
 
           {!isContentLoading &&
-            content.filter((item) => item.is_premium).length === 0 && (
+            creator.content.filter((item) => item.is_premium).length === 0 && (
               <div className="text-center py-16">
                 <h2 className="text-xl font-medium mb-2">No premium content</h2>
                 <p className="text-muted-foreground">
@@ -520,7 +498,7 @@ export default function CreatorProfilePage() {
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {content
+              {creator.content
                 .filter((item) => !item.is_premium)
                 .map((item) => (
                   <Link href={`/content/${item.id}`} key={item.id}>
@@ -558,7 +536,7 @@ export default function CreatorProfilePage() {
           )}
 
           {!isContentLoading &&
-            content.filter((item) => !item.is_premium).length === 0 && (
+            creator.content.filter((item) => !item.is_premium).length === 0 && (
               <div className="text-center py-16">
                 <h2 className="text-xl font-medium mb-2">No free content</h2>
                 <p className="text-muted-foreground">
@@ -615,21 +593,11 @@ export default function CreatorProfilePage() {
                     </a>
                   )}
 
-                  {creator.social_links?.website && (
-                    <a
-                      href={creator.social_links.website}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-2 text-muted-foreground hover:text-primary"
-                    >
-                      <Globe className="h-5 w-5" />
-                      <span>Website</span>
-                    </a>
-                  )}
+
 
                   {!creator.social_links?.twitter &&
                     !creator.social_links?.instagram &&
-                    !creator.social_links?.website && (
+                    (
                       <p className="text-muted-foreground">
                         No social links provided
                       </p>

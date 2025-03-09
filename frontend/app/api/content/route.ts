@@ -66,6 +66,7 @@ export async function POST(req: NextRequest) {
     type: body.category,
     access_price: body.price,
     content_hash: body.content_hash,
+    cipher_text: body.cipher_text,
     views_count: 0,
     likes_count: 0
   })
@@ -80,6 +81,7 @@ export async function POST(req: NextRequest) {
       is_premium: body.is_premium,
       access_price: body.price,
       content_hash: body.content_hash,
+      cipher_text: body.cipher_text,
       views_count: 0,
       likes_count: 0
     })

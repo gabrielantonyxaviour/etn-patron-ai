@@ -6,20 +6,52 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const { data, error } = await supabase
+  const { data: creatorData, error: creatorError } = await supabase
     .from("creator_profiles")
-    .select(
-      `
+    .select(`
       *,
-      users!creator_profiles_user_id_fkey(username, avatar_url, bio, eth_wallet_address)
-    `
-    )
+      users!user_id (
+        id,
+        username,
+        email,
+        full_name,
+        bio,
+        avatar_url,
+        eth_wallet_address,
+        last_login
+      ),
+      subscriber_count:subscriptions!creator_id(count)
+    `)
     .eq("id", id)
     .single();
 
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  if (creatorError) {
+    console.error("Error fetching creator profile:", creatorError);
+    return { error: creatorError };
   }
 
-  return NextResponse.json(data);
+  // Next, fetch all content posted by this creator
+  const { data: contentData, error: contentError } = await supabase
+    .from("content")
+    .select(`
+      *
+    `)
+    .eq("creator_id", id)
+    .order("created_at", { ascending: false });
+
+  if (contentError) {
+    console.error("Error fetching creator content:", contentError);
+    return { error: contentError };
+  }
+  console.log(JSON.stringify({
+    ...creatorData,
+    subscriber_count: creatorData.subscriber_count[0].count || 0,
+    content: contentData || []
+  }, null, 2))
+  // Return the combined data
+  return NextResponse.json({
+    ...creatorData,
+    subscriber_count: creatorData.subscriber_count[0].count || 0,
+    content: contentData || []
+  });
 }

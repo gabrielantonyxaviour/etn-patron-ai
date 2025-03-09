@@ -4,22 +4,11 @@ import { supabase } from "@/lib/supabase";
 export async function POST(req: NextRequest) {
   const body = await req.json();
 
-  if (!body.wallet || (!body.content_id && !body.comment_id)) {
+  if (!body.user_id || (!body.content_id && !body.comment_id)) {
     return NextResponse.json(
       { error: "Required fields missing" },
       { status: 400 }
     );
-  }
-
-  // Get user from wallet
-  const { data: user } = await supabase
-    .from("users")
-    .select("id")
-    .eq("eth_wallet_address", body.wallet)
-    .single();
-
-  if (!user) {
-    return NextResponse.json({ error: "User not found" }, { status: 404 });
   }
 
   try {
@@ -27,7 +16,7 @@ export async function POST(req: NextRequest) {
     const { data, error } = await supabase
       .from("likes")
       .insert({
-        user_id: user.id,
+        user_id: body.user_id,
         content_id: body.content_id || null,
         comment_id: body.comment_id || null,
       })
@@ -53,7 +42,7 @@ export async function POST(req: NextRequest) {
           .from("likes")
           .delete()
           .match({
-            user_id: user.id,
+            user_id: body.user_id,
             content_id: body.content_id || null,
             comment_id: body.comment_id || null,
           });
@@ -86,39 +75,25 @@ export async function POST(req: NextRequest) {
 
 export async function GET(req: NextRequest) {
   const url = new URL(req.url);
-  const wallet = url.searchParams.get("wallet");
-  const contentId = url.searchParams.get("contentId");
-  const commentId = url.searchParams.get("commentId");
+  const contentId = url.searchParams.get("content_id");
+  const userId = url.searchParams.get("user_id");
 
-  if (!wallet || (!contentId && !commentId)) {
+  if (!userId || !contentId) {
     return NextResponse.json(
       { error: "Required parameters missing" },
       { status: 400 }
     );
   }
 
-  // Get user from wallet
-  const { data: user } = await supabase
-    .from("users")
-    .select("id")
-    .eq("eth_wallet_address", wallet)
-    .single();
-
-  if (!user) {
-    return NextResponse.json({ liked: false });
-  }
-
-  // Check if liked
   const { data, error } = await supabase
     .from("likes")
     .select("*")
-    .eq("user_id", user.id)
-    .eq(contentId ? "content_id" : "comment_id", contentId || commentId)
-    .maybeSingle();
-
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    .eq("user_id", userId)
+    .eq("content_id", contentId)
+    .single();
+  if (!data || error) {
+    return NextResponse.json({ error: error ? error.message : "" }, { status: 500 });
   }
 
-  return NextResponse.json({ liked: !!data });
+  return NextResponse.json({ liked: data ? true : false });
 }

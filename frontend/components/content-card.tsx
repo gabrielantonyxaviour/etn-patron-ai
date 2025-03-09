@@ -8,7 +8,17 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, Eye, Lock } from "lucide-react";
+import { CheckCircle, Eye, Lock, Router } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useDynamicContext } from "@dynamic-labs/sdk-react-core";
+import { toast } from "sonner";
+import { isEthereumWallet } from "@dynamic-labs/ethereum";
+import { getRawPurchaseContent } from "@/lib/tx";
+import { Hex, parseEther } from "viem";
+import { electroneum, sepolia } from "viem/chains";
+import { deployments } from "@/lib/constants";
+import { useEnvironmentStore } from "./context";
 
 interface ContentCardProps {
   content: {
@@ -34,26 +44,102 @@ interface ContentCardProps {
   };
 }
 
+
 export function ContentCard({ content }: ContentCardProps) {
+  const router = useRouter();
+  const { primaryWallet } = useDynamicContext()
+  const [isPurchasing, setIsPurchasing] = useState(false);
+  const [isUnlocked, setIsUnlocked] = useState(false);
+  const { userProfile } = useEnvironmentStore((store) => store)
+  const handlePurchaseContent = async () => {
+
+    if (!primaryWallet || !isEthereumWallet(primaryWallet)) {
+      return;
+    }
+    if (!primaryWallet?.address || !content) {
+      toast.error("Please connect your wallet first");
+      return;
+    }
+
+    try {
+      setIsPurchasing(true);
+
+      toast.info("Purchasing Content", {
+        description: "Initiating Transaction to purchase the content.",
+      });
+      const isProduction = JSON.parse(
+        process.env.NEXT_PUBLIC_IS_PRODUCTION || "false"
+      );
+      const data = getRawPurchaseContent(BigInt("1")) as Hex;
+      const walletClient = await primaryWallet.getWalletClient();
+      const hash = await walletClient.sendTransaction({
+        to: deployments[isProduction ? electroneum.id : sepolia.id],
+        data: data,
+        value: parseEther(content.access_price ? content.access_price.toString() : "0"),
+      });
+      // Create transaction
+      const response = await fetch("/api/purchase", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          user_id: userProfile?.id,
+          content_id: content.id,
+          amount: content.access_price,
+          tx_hash: hash,
+          creator_id: content.creator.id,
+        }),
+      });
+
+      if (response.ok) {
+        toast.success("Transaction Success", {
+          description: "Content is Purchased Successfully.",
+          action: {
+            label: "View Tx",
+            onClick: () => {
+              window.open(
+                isProduction
+                  ? "https://blockexplorer.electroneum.com/tx/" + hash
+                  : "https://eth-sepolia.blockscout.com/tx/" + hash,
+                "_blank"
+              );
+            },
+          },
+        });
+        setIsUnlocked(true);
+      } else {
+        throw new Error("Purchase failed");
+      }
+    } catch (error) {
+      console.error("Error purchasing content:", error);
+      toast.error("Failed to purchase content. Please try again.");
+    } finally {
+      setIsPurchasing(false);
+    }
+  };
   return (
     <Card className="overflow-hidden hover:shadow-md transition-shadow">
       <Link href={`/content/${content.id}`}>
         <CardHeader className="p-0">
           <div className="relative h-48 bg-muted">
             <div
-              className="absolute inset-0 bg-center bg-cover"
+              className={`absolute inset-0 bg-center bg-cover ${content.is_premium ? "blur-md" : ""}`}
               style={{ backgroundImage: `url(${content.content_url})` }}
             />
             {content.is_premium && (
-              <div className="absolute top-2 right-2">
-                <Badge
-                  variant="default"
-                  className="bg-gradient-to-r from-amber-500 to-orange-500 gap-1"
-                >
-                  <Lock className="h-3 w-3" />
-                  Premium
-                </Badge>
-              </div>
+              <>
+
+                <div className="absolute top-2 right-2">
+                  <Badge
+                    variant="default"
+                    className="bg-gradient-to-r from-amber-500 to-orange-500 gap-1"
+                  >
+                    <Lock className="h-3 w-3" />
+                    Premium
+                  </Badge>
+                </div>
+              </>
             )}
             <div className="absolute bottom-2 right-2">
               <Badge variant="outline" className="bg-background/80 gap-1">
@@ -101,10 +187,12 @@ export function ContentCard({ content }: ContentCardProps) {
       </CardContent>
       <CardFooter className="p-4 pt-0">
         <div className="flex w-full gap-2">
-          {content.is_premium ? (
-            <Button className="w-full">Purchase {content.access_price} ETN</Button>
+          {content.is_premium && !isUnlocked ? (
+            <Button onClick={handlePurchaseContent} className="w-full" disabled={isPurchasing}>{isPurchasing ? "Purchasing..." : `Purchase ${content.access_price} ETN`}</Button>
           ) : (
-            <Button variant="outline" className="w-full">
+            <Button variant="outline" className="w-full" onClick={() => {
+              router.push(`/content/${content.id}`)
+            }}>
               View Content
             </Button>
           )}

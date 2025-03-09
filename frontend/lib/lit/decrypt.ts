@@ -1,16 +1,16 @@
 import { LitNodeClient } from "@lit-protocol/lit-node-client";
-import { LIT_NETWORK, LIT_ABILITY } from "@lit-protocol/constants";
+import { LIT_NETWORK, LIT_ABILITY, LIT_RPC } from "@lit-protocol/constants";
 import { decryptToString } from "@lit-protocol/encryption";
 import {
   createSiweMessage,
   generateAuthSig,
   LitAccessControlConditionResource,
 } from "@lit-protocol/auth-helpers";
-import { providers } from "ethers";
+import { ethers, providers } from "ethers";
 import { verifyDeployment } from "../constants";
 
 export async function decrypt(
-  signer: providers.JsonRpcSigner,
+  // signer: providers.JsonRpcSigner,
   ciphertext: string,
   dataHash: string
 ): Promise<{
@@ -22,6 +22,10 @@ export async function decrypt(
     debug: false,
   });
 
+  const ethersWallet = new ethers.Wallet(
+    process.env.NEXT_PUBLIC_PRIVATE_KEY || "", // Replace with your private key
+    new ethers.providers.JsonRpcProvider(LIT_RPC.CHRONICLE_YELLOWSTONE)
+  );
   await litNodeClient.connect();
   console.log("Connected to Lit Network");
 
@@ -85,13 +89,13 @@ export async function decrypt(
         uri,
         expiration,
         resources: resourceAbilityRequests,
-        walletAddress: await signer.getAddress(),
+        walletAddress: ethersWallet.address,
         nonce: await litNodeClient.getLatestBlockhash(),
         litNodeClient,
       });
 
       return await generateAuthSig({
-        signer: signer,
+        signer: ethersWallet,
         toSign,
       });
     },
