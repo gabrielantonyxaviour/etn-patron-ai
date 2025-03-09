@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
   console.log("CONTENT ID")
   console.log(contentId)
 
-  let query = supabase
+  const query = supabase
     .from("comments")
     .select(
       `
