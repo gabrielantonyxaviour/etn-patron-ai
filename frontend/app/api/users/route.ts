@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
-import { v4 as uuidv4 } from "uuid";
 
 export async function GET(req: NextRequest) {
   const url = new URL(req.url);

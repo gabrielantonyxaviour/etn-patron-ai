@@ -70,16 +70,16 @@ export default function ProfilePage() {
   // Fetch transactions
   useEffect(() => {
     const fetchTransactions = async () => {
-      if (!primaryWallet?.address) return;
+      if (!userProfile) return;
 
       try {
         const response = await fetch(
-          `/api/transactions?wallet=${primaryWallet.address}`
+          `/api/transactions?sender_id=${userProfile?.id}`
         );
 
         if (response.ok) {
           const data = await response.json();
-          setTransactions(data.transactions || []);
+          setTransactions(data || []);
         }
       } catch (error) {
         console.error("Error fetching transactions:", error);
@@ -88,7 +88,7 @@ export default function ProfilePage() {
 
     fetchTransactions();
     // Remove the comma that was after fetchTransactions()
-  }, [primaryWallet?.address]);
+  }, [userProfile]);
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
@@ -481,13 +481,14 @@ export default function ProfilePage() {
                           >
                             <div>
                               <div className="font-medium">
-                                {tx.transaction_type === "subscription"
+                                {tx.type === "subscription"
                                   ? "Subscription Payment"
-                                  : tx.transaction_type === "content_purchase"
+                                  : tx.type === "content_purchase"
                                     ? "Content Purchase"
-                                    : tx.transaction_type === "tip"
+                                    : tx.type === "tip"
                                       ? "Tip"
-                                      : "Transaction"}
+                                      : tx.type === "create_profile" ?
+                                        "Create Creator Profile" : "Transaction"}
                               </div>
                               <div className="text-sm text-muted-foreground">
                                 {new Date(tx.created_at).toLocaleDateString()}
@@ -495,15 +496,13 @@ export default function ProfilePage() {
                             </div>
                             <div className="text-right">
                               <div
-                                className={`font-medium ${tx.status === "completed"
-                                  ? "text-green-600 dark:text-green-500"
-                                  : ""
-                                  }`}
+                                className={`font-medium  text-green-600 dark:text-green-500
+                                  `}
                               >
                                 {tx.amount.toFixed(2)} ETN
                               </div>
                               <div className="text-xs text-muted-foreground">
-                                {tx.status}
+                                Completed
                               </div>
                             </div>
                           </div>

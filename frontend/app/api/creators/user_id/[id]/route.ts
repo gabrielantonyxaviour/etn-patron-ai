@@ -114,7 +114,7 @@ export async function POST(req: NextRequest) {
       category: createProfileData.category,
       social_links: createProfileData.social_links,
       verified: createProfileData.verified,
-    })
+    }).select("*")
     .single();
 
 
@@ -123,7 +123,7 @@ export async function POST(req: NextRequest) {
     recipient_id: null,
     content_id: null,
     desc: "Create Profile",
-    tx_hash: createProfileData.txHash,
+    tx_hash: createProfileData.tx_hash,
     type: "create_profile",
     amount: 0
   })
@@ -133,7 +133,7 @@ export async function POST(req: NextRequest) {
     recipient_id: null,
     content_id: null,
     desc: "Create Profile",
-    tx_hash: createProfileData.txHash,
+    tx_hash: createProfileData.tx_hash,
     type: "create_profile",
     amount: 0
   })

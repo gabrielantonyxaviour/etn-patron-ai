@@ -247,7 +247,7 @@ export default function CreatorDashboardPage() {
       if (!primaryWallet?.address || !creatorProfile?.id) return;
       try {
         const response = await fetch(
-          `/api/subscribers?creatorId=${creatorProfile.id}&wallet=${primaryWallet.address}`
+          `/api/subscriptions?creatorId=${creatorProfile.id}`
         );
 
         if (response.ok) {
@@ -433,7 +433,6 @@ export default function CreatorDashboardPage() {
       console.log("Primary wallet not found");
       return;
     }
-
 
     try {
       setIsCreateProfileLoading(true);

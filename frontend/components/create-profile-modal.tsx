@@ -123,7 +123,7 @@ export function ProfileCreationModal() {
   };
 
   return (
-    <Dialog open={isProfileModalOpen} onOpenChange={handleOpenChange}>
+    <Dialog open={isProfileModalOpen} >
       <DialogContent className="sen sm:max-w-[500px] h-[90vh] p-0 overflow-hidden flex flex-col">
         <DialogHeader className="p-6 pb-2 flex-shrink-0">
           <DialogTitle>Create Your Profile</DialogTitle>
