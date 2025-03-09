@@ -13,19 +13,24 @@ import { CheckCircle, Eye, Lock } from "lucide-react";
 interface ContentCardProps {
   content: {
     id: string;
-    title: string;
-    creator: {
+    caption: string;
+    created_at: string;
+    creator_profiles: {
       id: string;
-      name: string;
-      username: string;
-      avatar: string;
       verified: boolean;
+      users: {
+        full_name: string;
+        avatar_url: string;
+        username: string;
+      }
     };
-    thumbnail: string;
-    category: string;
-    price: string;
-    isPremium: boolean;
-    views: number;
+    content_hash: string;
+    content_url: string;
+    type: string;
+    access_price: string;
+    is_premium: boolean;
+    views_count: number;
+    likes_count: number;
   };
 }
 
@@ -37,9 +42,9 @@ export function ContentCard({ content }: ContentCardProps) {
           <div className="relative h-48 bg-muted">
             <div
               className="absolute inset-0 bg-center bg-cover"
-              style={{ backgroundImage: `url(${content.thumbnail})` }}
+              style={{ backgroundImage: `url(${content.content_url})` }}
             />
-            {content.isPremium && (
+            {content.is_premium && (
               <div className="absolute top-2 right-2">
                 <Badge
                   variant="default"
@@ -53,7 +58,7 @@ export function ContentCard({ content }: ContentCardProps) {
             <div className="absolute bottom-2 right-2">
               <Badge variant="outline" className="bg-background/80 gap-1">
                 <Eye className="h-3 w-3" />
-                {content.views.toLocaleString()}
+                {content.views_count.toLocaleString()}
               </Badge>
             </div>
           </div>
@@ -61,9 +66,9 @@ export function ContentCard({ content }: ContentCardProps) {
       </Link>
       <CardContent className="p-4">
         <div className="flex items-center justify-between mb-2">
-          <Badge variant="secondary">{content.category}</Badge>
-          {content.isPremium ? (
-            <div className="text-sm font-medium">{content.price} ETN</div>
+          <Badge variant="secondary">{content.type}</Badge>
+          {content.is_premium ? (
+            <div className="text-sm font-medium">{content.access_price} ETN</div>
           ) : (
             <Badge
               variant="outline"
@@ -74,21 +79,21 @@ export function ContentCard({ content }: ContentCardProps) {
           )}
         </div>
         <Link href={`/content/${content.id}`} className="hover:underline">
-          <h3 className="font-semibold line-clamp-2 mb-2">{content.title}</h3>
+          <h3 className="font-semibold line-clamp-2 mb-2">{content.caption}</h3>
         </Link>
         <div className="flex items-center gap-2">
           <Avatar className="w-6 h-6">
             <AvatarImage
-              src={content.creator.avatar}
-              alt={content.creator.name}
+              src={content.creator_profiles.users.avatar_url}
+              alt={content.creator_profiles.users.full_name}
             />
             <AvatarFallback>
-              {content.creator.name.slice(0, 2).toUpperCase()}
+              {content.creator_profiles.users.full_name.slice(0, 2).toUpperCase()}
             </AvatarFallback>
           </Avatar>
           <div className="flex items-center">
-            <span className="text-sm">{content.creator.name}</span>
-            {content.creator.verified && (
+            <span className="text-sm">{content.creator_profiles.users.full_name}</span>
+            {content.creator_profiles.verified && (
               <CheckCircle className="h-3 w-3 ml-1 fill-blue-500 text-white" />
             )}
           </div>
@@ -96,8 +101,8 @@ export function ContentCard({ content }: ContentCardProps) {
       </CardContent>
       <CardFooter className="p-4 pt-0">
         <div className="flex w-full gap-2">
-          {content.isPremium ? (
-            <Button className="w-full">Purchase {content.price} ETN</Button>
+          {content.is_premium ? (
+            <Button className="w-full">Purchase {content.access_price} ETN</Button>
           ) : (
             <Button variant="outline" className="w-full">
               View Content

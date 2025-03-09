@@ -10,15 +10,20 @@ export async function GET(req: NextRequest) {
 
   let query = supabase
     .from("creator_profiles")
-    .select(` *,
-      users:user_id (
+    .select(` 
+      *,
+      users!user_id (
         id,
         username,
         email,
         full_name,
-        avatar_url,
         bio,
-        eth_wallet_address`)
+        avatar_url,
+        eth_wallet_address,
+        last_login
+      ),
+        subscriber_count:subscriptions!creator_id(count)
+    `)
     .order("created_at", { ascending: false })
     .range(offset, offset + limit - 1);
 
@@ -32,8 +37,14 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
+  const creators = data.map((creator) => {
+    return {
+      ...creator,
+      subscriber_count: creator.subscriber_count[0].count || 0,
+    }
+  })
   return NextResponse.json({
-    creators: data,
+    creators: creators,
     pagination: {
       page,
       limit,

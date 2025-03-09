@@ -17,34 +17,48 @@ import { Suspense } from "react";
 // Define types for our data
 interface Creator {
   id: string;
-  creator_name: string;
   category: string;
+  banner_url: string;
+  social_links: {
+    twitter: string;
+    instagram: string;
+  },
+  sub_price: number;
+  updated_at: string;
+  created_at: string;
   users: {
+    id: string;
+    eth_wallet_address: string;
+    bio: string;
+    email: string;
     username: string;
+    full_name: string;
     avatar_url: string;
   };
-  subscribers_count?: number;
-  bio?: string;
-  verified?: boolean;
+  subscriber_count: number;
+  verified: boolean;
 }
 
 interface Content {
   id: string;
-  title: string;
-  description: string;
-  thumbnail_url: string;
-  content_type: string;
-  is_premium: boolean;
-  access_price: number;
-  views_count: number;
+  caption: string;
+  created_at: string;
   creator_profiles: {
     id: string;
-    creator_name: string;
+    verified: boolean;
     users: {
-      username: string;
+      full_name: string;
       avatar_url: string;
-    };
+      username: string;
+    }
   };
+  content_hash: string;
+  content_url: string;
+  type: string;
+  access_price: string;
+  is_premium: boolean;
+  views_count: number;
+  likes_count: number;
 }
 
 // Categories displayed on the Categories tab
@@ -104,9 +118,7 @@ function Explore() {
         const data = await response.json();
 
         console.log("FETCH CONTENT", data);
-        if (data.content) {
-          setContent(data.content);
-        }
+        setContent(data);
       } catch (error) {
         console.error("Error fetching content:", error);
       } finally {
@@ -125,11 +137,12 @@ function Explore() {
         const response = await fetch("/api/content?limit=4");
         const data = await response.json();
 
-        if (data.content) {
+        if (data) {
           // Sort by views to get trending content
-          const sorted = [...data.content].sort(
+          const sorted = [...data].sort(
             (a, b) => b.views_count - a.views_count
           );
+          console.log("TRENDING CONTENT", sorted);
 
           setTrendingContent(sorted);
         }
@@ -150,7 +163,7 @@ function Explore() {
   // Filter creators/content based on search query
   const filteredCreators = creators.filter(
     (creator) =>
-      creator.creator_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      creator.users.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       creator.users.username
         .toLowerCase()
         .includes(searchQuery.toLowerCase()) ||
@@ -159,9 +172,8 @@ function Explore() {
 
   const filteredContent = content.filter(
     (item) =>
-      item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.creator_profiles.creator_name
+      item.caption.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.creator_profiles.users.full_name
         .toLowerCase()
         .includes(searchQuery.toLowerCase())
   );
@@ -217,17 +229,7 @@ function Explore() {
               {filteredCreators.map((creator) => (
                 <CreatorCard
                   key={creator.id}
-                  creator={{
-                    id: creator.id,
-                    name: creator.creator_name,
-                    username: creator.users.username,
-                    avatar:
-                      creator.users.avatar_url || "https://i.pravatar.cc/150",
-                    category: creator.category,
-                    subscribers: creator.subscribers_count || 0,
-                    bio: creator.bio || "No bio available",
-                    verified: creator.verified || false,
-                  }}
+                  creator={creator}
                 />
               ))}
             </div>
@@ -248,24 +250,7 @@ function Explore() {
               {filteredContent.map((item) => (
                 <ContentCard
                   key={item.id}
-                  content={{
-                    id: item.id,
-                    title: item.title,
-                    creator: {
-                      id: item.creator_profiles.id,
-                      name: item.creator_profiles.creator_name,
-                      username: item.creator_profiles.users.username,
-                      avatar:
-                        item.creator_profiles.users.avatar_url ||
-                        "https://i.pravatar.cc/150",
-                      verified: false, // You might want to add this to your API
-                    },
-                    thumbnail: item.thumbnail_url || "/content/placeholder.jpg",
-                    category: item.content_type,
-                    price: item.access_price.toString(),
-                    isPremium: item.is_premium,
-                    views: item.views_count,
-                  }}
+                  content={item}
                 />
               ))}
             </div>
@@ -315,24 +300,7 @@ function Explore() {
             {trendingContent.map((item) => (
               <ContentCard
                 key={item.id}
-                content={{
-                  id: item.id,
-                  title: item.title,
-                  creator: {
-                    id: item.creator_profiles.id,
-                    name: item.creator_profiles.creator_name,
-                    username: item.creator_profiles.users.username,
-                    avatar:
-                      item.creator_profiles.users.avatar_url ||
-                      "https://i.pravatar.cc/150",
-                    verified: false,
-                  },
-                  thumbnail: item.thumbnail_url || "/content/placeholder.jpg",
-                  category: item.content_type,
-                  price: item.access_price.toString(),
-                  isPremium: item.is_premium,
-                  views: item.views_count,
-                }}
+                content={item}
               />
             ))}
           </div>
