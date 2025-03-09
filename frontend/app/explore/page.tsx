@@ -26,7 +26,7 @@ interface Creator {
   sub_price: number;
   updated_at: string;
   created_at: string;
-  users: {
+  user: {
     id: string;
     eth_wallet_address: string;
     bio: string;
@@ -43,10 +43,10 @@ interface Content {
   id: string;
   caption: string;
   created_at: string;
-  creator_profiles: {
+  creator: {
     id: string;
     verified: boolean;
-    users: {
+    user: {
       full_name: string;
       avatar_url: string;
       username: string;
@@ -163,8 +163,8 @@ function Explore() {
   // Filter creators/content based on search query
   const filteredCreators = creators.filter(
     (creator) =>
-      creator.users.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      creator.users.username
+      creator.user.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      creator.user.username
         .toLowerCase()
         .includes(searchQuery.toLowerCase()) ||
       creator.category.toLowerCase().includes(searchQuery.toLowerCase())
@@ -173,7 +173,7 @@ function Explore() {
   const filteredContent = content.filter(
     (item) =>
       item.caption.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.creator_profiles.users.full_name
+      item.creator.user.full_name
         .toLowerCase()
         .includes(searchQuery.toLowerCase())
   );

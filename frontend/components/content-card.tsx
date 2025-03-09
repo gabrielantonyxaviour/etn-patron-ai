@@ -15,10 +15,10 @@ interface ContentCardProps {
     id: string;
     caption: string;
     created_at: string;
-    creator_profiles: {
+    creator: {
       id: string;
       verified: boolean;
-      users: {
+      user: {
         full_name: string;
         avatar_url: string;
         username: string;
@@ -84,16 +84,16 @@ export function ContentCard({ content }: ContentCardProps) {
         <div className="flex items-center gap-2">
           <Avatar className="w-6 h-6">
             <AvatarImage
-              src={content.creator_profiles.users.avatar_url}
-              alt={content.creator_profiles.users.full_name}
+              src={content.creator.user.avatar_url}
+              alt={content.creator.user.full_name}
             />
             <AvatarFallback>
-              {content.creator_profiles.users.full_name.slice(0, 2).toUpperCase()}
+              {content.creator.user.full_name.slice(0, 2).toUpperCase()}
             </AvatarFallback>
           </Avatar>
           <div className="flex items-center">
-            <span className="text-sm">{content.creator_profiles.users.full_name}</span>
-            {content.creator_profiles.verified && (
+            <span className="text-sm">{content.creator.user.full_name}</span>
+            {content.creator.verified && (
               <CheckCircle className="h-3 w-3 ml-1 fill-blue-500 text-white" />
             )}
           </div>

@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
     .from("creator_profiles")
     .select(` 
       *,
-      users!user_id (
+      user!user_id (
         id,
         username,
         email,

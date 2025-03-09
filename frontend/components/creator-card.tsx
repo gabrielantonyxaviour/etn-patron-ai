@@ -22,7 +22,7 @@ interface CreatorCardProps {
     sub_price: number;
     updated_at: string;
     created_at: string;
-    users: {
+    user: {
       id: string;
       eth_wallet_address: string;
       bio: string;
@@ -45,23 +45,23 @@ export function CreatorCard({ creator }: CreatorCardProps) {
       <CardContent className="pt-0 -mt-12">
         <div className="flex flex-col items-center">
           <Avatar className="w-24 h-24 border-4 border-background">
-            <AvatarImage src={creator.users.avatar_url} alt={creator.users.full_name} />
+            <AvatarImage src={creator.user.avatar_url} alt={creator.user.full_name} />
             <AvatarFallback>
-              {creator.users.full_name.slice(0, 2).toUpperCase()}
+              {creator.user.full_name.slice(0, 2).toUpperCase()}
             </AvatarFallback>
           </Avatar>
           <div className="mt-4 text-center">
             <div className="flex items-center justify-center gap-1">
-              <h3 className="font-semibold text-lg">{creator.users.full_name}</h3>
+              <h3 className="font-semibold text-lg">{creator.user.full_name}</h3>
               {creator.verified && (
                 <CheckCircle className="h-4 w-4 fill-blue-500 text-white" />
               )}
             </div>
-            <p className="text-sm text-muted-foreground">@{creator.users.username}</p>
+            <p className="text-sm text-muted-foreground">@{creator.user.username}</p>
             <Badge variant="secondary" className="mt-2">
               {creator.category}
             </Badge>
-            <p className="text-sm mt-4 line-clamp-2">{creator.users.bio}</p>
+            <p className="text-sm mt-4 line-clamp-2">{creator.user.bio}</p>
           </div>
         </div>
       </CardContent>
@@ -74,7 +74,7 @@ export function CreatorCard({ creator }: CreatorCardProps) {
         </div>
         <div className="flex gap-2 w-full">
           <Button variant="outline" className="w-full" asChild>
-            <Link href={`/profile/${creator.users.username}`}>Profile</Link>
+            <Link href={`/profile/${creator.user.username}`}>Profile</Link>
           </Button>
           <Button className="w-full">Subscribe</Button>
         </div>

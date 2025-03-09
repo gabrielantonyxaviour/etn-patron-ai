@@ -8,7 +8,23 @@ export async function GET(req: NextRequest) {
 
   let query = supabase
     .from("content")
-    .select("*")
+    .select(`*, creator:creator_id (
+        id,
+        category,
+        sub_price,
+        banner_url,
+        social_links,
+        verified,
+        user:user_id (
+          id,
+          username,
+          email,
+          full_name,
+          bio,
+          avatar_url,
+          eth_wallet_address
+        )
+      )`)
 
 
   if (creator_id) {
