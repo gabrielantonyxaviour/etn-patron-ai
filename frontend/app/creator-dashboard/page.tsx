@@ -100,20 +100,11 @@ interface Subscriber {
 
 interface Transaction {
   id: string;
-  transaction_type: string;
+  desc: string;
+  hash: string;
+  type: string;
   amount: number;
   created_at: string;
-  status: string;
-  sender: {
-    username: string;
-    avatar_url: string;
-  };
-  content?: {
-    title: string;
-  };
-  subscription?: {
-    subscription_tier: string;
-  };
 }
 
 interface DashboardMetrics {
@@ -330,7 +321,6 @@ export default function CreatorDashboardPage() {
     const thisMonthEarnings = transactions
       .filter(
         (tx) =>
-          tx.status === "completed" &&
           new Date(tx.created_at) >=
           new Date(now.getFullYear(), now.getMonth(), 1)
       )
@@ -339,7 +329,6 @@ export default function CreatorDashboardPage() {
     const lastMonthEarnings = transactions
       .filter(
         (tx) =>
-          tx.status === "completed" &&
           new Date(tx.created_at) >= lastMonth &&
           new Date(tx.created_at) <
           new Date(now.getFullYear(), now.getMonth(), 1)
@@ -363,21 +352,20 @@ export default function CreatorDashboardPage() {
     const contentPurchases = transactions
       .filter(
         (tx) =>
-          tx.status === "completed" &&
-          tx.transaction_type === "content_purchase"
+          tx.type === "content_purchase"
       )
       .reduce((sum, tx) => sum + tx.amount, 0);
 
     const subscriptions = transactions
       .filter(
         (tx) =>
-          tx.status === "completed" && tx.transaction_type === "subscription"
+          tx.type === "subscription"
       )
       .reduce((sum, tx) => sum + tx.amount, 0);
 
     const tips = transactions
       .filter(
-        (tx) => tx.status === "completed" && tx.transaction_type === "tip"
+        (tx) => tx.type === "tip"
       )
       .reduce((sum, tx) => sum + tx.amount, 0);
 
@@ -470,6 +458,7 @@ export default function CreatorDashboardPage() {
             instagram: createProfileForm.instagram
           },
           verified: false,
+          tx_hash: hash
         };
 
         console.log("Create profile data")
@@ -477,7 +466,7 @@ export default function CreatorDashboardPage() {
 
         // Create creator profile
         const response = await fetch(
-          `/api/creators/user_id/${primaryWallet.address}`,
+          `/api/creators/user_id/${userProfile?.id}`,
           {
             method: "POST",
             headers: {
@@ -842,7 +831,7 @@ export default function CreatorDashboardPage() {
         <StatCard
           title="Tips Received"
           value={`${earningsBySource.tips.toFixed(2)} ETN`}
-          description={`${transactions.filter((tx) => tx.transaction_type === "tip").length
+          description={`${transactions.filter((tx) => tx.type === "tip").length
             } tips received`}
           icon={<Zap className="h-4 w-4" />}
           trend="up"

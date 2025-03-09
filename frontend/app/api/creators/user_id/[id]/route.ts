@@ -67,6 +67,32 @@ export async function PUT(
     .eq("user_id", id)
     .single();
 
+
+  console.log({
+    sender_id: updateData.senderId,
+    recipient_id: null,
+    content_id: null,
+    desc: "Update Profile",
+    tx_hash: updateData.txHash,
+    type: "update_profile",
+    amount: 0
+  })
+
+  const { data: txData, error: txError } = await supabase.from("transactions").insert({
+    sender_id: updateData.senderId,
+    recipient_id: null,
+    content_id: null,
+    desc: "Update Profile",
+    tx_hash: updateData.txHash,
+    type: "update_profile",
+    amount: 0
+  })
+
+  if (txError) {
+    console.error(`Error creating transaction: ${txError.message}`);
+    return NextResponse.json({ error: txError.message }, { status: 500 });
+  }
+
   if (error) {
     console.error(`Error updating profile: ${error.message}`);
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -90,6 +116,34 @@ export async function POST(req: NextRequest) {
       verified: createProfileData.verified,
     })
     .single();
+
+
+  console.log({
+    sender_id: createProfileData.user_id,
+    recipient_id: null,
+    content_id: null,
+    desc: "Create Profile",
+    tx_hash: createProfileData.txHash,
+    type: "create_profile",
+    amount: 0
+  })
+
+  const { data: txData, error: txError } = await supabase.from("transactions").insert({
+    sender_id: createProfileData.user_id,
+    recipient_id: null,
+    content_id: null,
+    desc: "Create Profile",
+    tx_hash: createProfileData.txHash,
+    type: "create_profile",
+    amount: 0
+  })
+
+
+  if (txError) {
+    console.error(`Error creating transaction: ${txError.message}`);
+    return NextResponse.json({ error: txError.message }, { status: 500 });
+  }
+
 
   if (error) {
     console.error(`Error creating profile: ${error.message}`);

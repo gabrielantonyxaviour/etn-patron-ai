@@ -58,6 +58,33 @@ export async function POST(req: NextRequest) {
     .select()
     .single();
 
+
+  console.log({
+    sender_id: body.sender_id,
+    recipient_id: null,
+    content_id: data.id,
+    desc: "Create Post",
+    tx_hash: body.txHash,
+    type: "create_post",
+    amount: 0
+  })
+
+  const { data: txData, error: txError } = await supabase.from("transactions").insert({
+    sender_id: body.sender_id,
+    recipient_id: null,
+    content_id: data.id,
+    desc: "Create Post",
+    tx_hash: body.txHash,
+    type: "create_post",
+    amount: 0
+  })
+
+  if (txError) {
+    console.error(`Error creating transaction: ${txError.message}`);
+    return NextResponse.json({ error: txError.message }, { status: 500 });
+  }
+
+
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
