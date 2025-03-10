@@ -96,7 +96,7 @@ export async function POST(req: NextRequest) {
     recipient_id: null,
     content_id: data.id,
     desc: "Create Post",
-    tx_hash: body.txHash,
+    tx_hash: body.tx_hash,
     type: "create_post",
     amount: 0
   })
@@ -106,7 +106,7 @@ export async function POST(req: NextRequest) {
     recipient_id: null,
     content_id: data.id,
     desc: "Create Post",
-    tx_hash: body.txHash,
+    tx_hash: body.tx_hash,
     type: "create_post",
     amount: 0
   })

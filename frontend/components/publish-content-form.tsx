@@ -158,7 +158,8 @@ export function PublishContentForm({
           is_premium: formData.isPremium,
           price: formData.isPremium ? formData.price : "0",
           content_hash: dataHash,
-          cipher_text: modifiedContent
+          cipher_text: modifiedContent,
+          tx_hash: hash
         })
         const response = await fetch("/api/content", {
           method: "POST",
@@ -175,7 +176,8 @@ export function PublishContentForm({
             is_premium: formData.isPremium,
             price: formData.isPremium ? formData.price : "0",
             content_hash: dataHash,
-            cipher_text: modifiedContent
+            cipher_text: modifiedContent,
+            tx_hash: hash
           }),
         });
 

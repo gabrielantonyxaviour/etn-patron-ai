@@ -36,6 +36,7 @@ import { Hex, parseEther } from "viem";
 import { isEthereumWallet } from "@dynamic-labs/ethereum";
 import { electroneum, sepolia } from "viem/chains";
 import { deployments } from "@/lib/constants";
+import { useEnvironmentStore } from "@/components/context";
 interface User {
   id: string;
   bio: string;
@@ -95,6 +96,7 @@ export default function CreatorProfilePage() {
   const [tipAmount, setTipAmount] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const { userProfile } = useEnvironmentStore((store) => store)
 
   const id = typeof params.id === "string" ? params.id : "";
 
@@ -169,7 +171,6 @@ export default function CreatorProfilePage() {
     try {
       setIsSubscribing(true);
 
-
       toast.info("Subscribing to " + creator.users.full_name, {
         description: "Initiating Transaction to subscribe.",
       });
@@ -189,7 +190,7 @@ export default function CreatorProfilePage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          user_id: primaryWallet.address,
+          user_id: userProfile?.id,
           creator_id: creator.id,
           amount: creator.sub_price,
           tx_hash: hash

@@ -373,37 +373,37 @@ export default function ContentPage() {
     <div className="container max-w-4xl mx-auto py-8 px-4">
       {/* Image Content */}
       <div className="mb-8 rounded-lg overflow-hidden border bg-card">
-        {content.is_premium && (!isPurchased || !isDecrypted) ? (
+        {content.is_premium && (!isDecrypted) ? (
           <div className="relative">
             <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center p-4 z-10">
               <Lock className="h-12 w-12 text-white mb-4" />
               <h3 className="text-xl font-bold text-white mb-2">
                 Premium Content
               </h3>
-              {isPurchased ? <p className="text-white/80 text-center mb-4">
+              {isPurchased || userProfile?.id == content.creator.user.id ? <p className="text-white/80 text-center mb-4">
                 You own this encrypted content.
               </p> : <p className="text-white/80 text-center mb-4">
                 Unlock this content for {content.access_price} ETN
               </p>}
 
-              {primaryWallet ? !isPurchased ? (
+              {primaryWallet ? isPurchased || userProfile?.id == content.creator.user.id ? (
                 <Button
-                  onClick={handlePurchaseContent}
+                  onClick={handleDecryption}
                   disabled={isPurchasing}
                   className="min-w-32"
                 >
                   {isPurchasing
-                    ? "Processing..."
-                    : `Purchase (${content.access_price} ETN)`}
+                    ? <p>Processing...</p>
+                    : <div className="flex space-x-2 items-center"><Image src={'/lit.jpeg'} className="rounded-full" width={25} height={25} alt="lit" /><p>Decrypt with Lit</p></div>}
                 </Button>
               ) : <Button
-                onClick={handleDecryption}
+                onClick={handlePurchaseContent}
                 disabled={isPurchasing}
                 className="min-w-32"
               >
                 {isPurchasing
-                  ? <p>Processing...</p>
-                  : <div className="flex space-x-2 items-center"><Image src={'/lit.jpeg'} className="rounded-full" width={25} height={25} alt="lit" /><p>Decrypt with Lit</p></div>}
+                  ? "Processing..."
+                  : `Purchase (${content.access_price} ETN)`}
               </Button> : (
                 <DynamicWidget />
               )}
