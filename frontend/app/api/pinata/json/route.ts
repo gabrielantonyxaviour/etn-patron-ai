@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
 
         try {
             const pinata = new PinataSDK({
-                pinataJwt: process.env.NEXT_PUBLIC_PINATA_JWT,
+                pinataJwt: process.env.PINATA_JWT,
                 pinataGateway: "amethyst-impossible-ptarmigan-368.mypinata.cloud",
             });
             const jsonString = JSON.stringify(jsonObject, null, 2);
